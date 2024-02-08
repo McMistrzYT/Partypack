@@ -14,7 +14,7 @@ export function Home() {
                     Partypack was created by <a href="/credits">everyone listed here</a>. If you're interested in hosting your own instance of Partypack, be sure to check the <a href="https://github.com/McMistrzYT/Partypack">GitHub repo</a>.</Text>
                 <Heading>Quickstart Guide</Heading>
                 <Text>
-                    <b>Consider watching the easier to understand, visual guide available <a href="/tutorials/Quickstart.mp4">here</a>.</b><br />
+                    <b>Consider watching the easier to understand, visual guide available in the Discord server.</b><br />
                     1. Join this instance's <a href="https://discord.gg/Rhd9Hq4D62">Discord server</a><br />
                     2. Click on the <SignInIcon size={16} /> icon in the top right<br />
                     3. Log in using your Discord account<br />

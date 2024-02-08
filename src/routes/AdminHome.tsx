@@ -12,9 +12,9 @@ export function AdminHome() {
                     <PageHeader.Title>Partypack Admin Management Panel</PageHeader.Title>
                 </PageHeader.TitleArea>
                 <PageHeader.Description>
-                    TEMP
+                    Welcome! Please select a management page you'd like to visit:
                     <Button onClick={() => navigate("/admin/tracks")}>Tracks</Button>
-                    <Button onClick={() => navigate("/admin/featured")}>Featured Tab Management</Button>
+                    <Button onClick={() => navigate("/admin/featured")}>Discovery</Button>
                 </PageHeader.Description>
             </PageHeader>
         </Box>

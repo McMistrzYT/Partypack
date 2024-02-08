@@ -68,7 +68,7 @@ async function Initialize() {
 Initialize();
 
 // ! FESTIVAL-SPECIFIC STUFF
-import axios from "axios";
+//import axios from "axios";
 
-axios.defaults.validateStatus = () => true;
-axios.defaults.headers.common["X-Do-Not-Redirect"] = "true";
+//axios.defaults.validateStatus = () => true;
+//axios.defaults.headers.common["X-Do-Not-Redirect"] = "true";

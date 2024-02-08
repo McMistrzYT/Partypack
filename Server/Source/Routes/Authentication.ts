@@ -1,3 +1,4 @@
+import axios from "axios";
 import jwt from "jsonwebtoken";
 import qs from "querystring";
 import j from "joi";
@@ -15,15 +16,11 @@ const App = Router();
 
 // ? hacky, if you want, make it less hacky
 async function QuickRevokeToken(res: Response, Token: string) {
-
-    await fetch("https://discord.com/api/oauth2/token/revoke", {
-        method: "POST",
+    await axios.post("https://discord.com/api/oauth2/token/revoke", qs.stringify({ token: Token, token_type_hint: "access_token" }), {
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
             "Authorization": `Basic ${Buffer.from(`${DISCORD_CLIENT_ID}:${DISCORD_CLIENT_SECRET}`).toString("base64")}`
-        },
-        body: qs.stringify({ token: Token, token_type_hint: "access_token" })
-
+        }
     })
     return res;
 }
@@ -39,36 +36,33 @@ App.get("/discord",
 
         //const Discord = await axios.post(`https://discord.com/api/oauth2/token`, qs.stringify({ grant_type: "authorization_code", code: req.query.code as string, redirect_uri: `${FULL_SERVER_ROOT}/api/discord` }), { auth: { username: DISCORD_CLIENT_ID!, password: DISCORD_CLIENT_SECRET! } });
 
-        const Discord = await fetch(
+        const Discord = await axios.post(
             "https://discord.com/api/oauth2/token",
+            qs.stringify({ grant_type: "authorization_code", code: req.query.code as string, redirect_uri: `${FULL_SERVER_ROOT}/api/discord` }),
             {
-                method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
                     "Authorization": `Basic ${Buffer.from(`${DISCORD_CLIENT_ID}:${DISCORD_CLIENT_SECRET}`).toString("base64")}`
-                },
-                body: qs.stringify({ grant_type: "authorization_code", code: req.query.code as string, redirect_uri: `${FULL_SERVER_ROOT}/api/discord` })
+                }
             }
         )
 
         if (Discord.status !== 200)
             return res.status(500).send("Failed to request OAuth token from Discord's services.");
 
-        const DiscordData = await Discord.json() as any; // :waaaaa:
+        const DiscordData = Discord.data; // :waaaaa:
 
         if (!DiscordData.scope.includes("identify"))
             return (await QuickRevokeToken(res, DiscordData.access_token)).status(400).send("Missing identify scope. Please check if your OAuth link is correctly set up!");
 
 
-        const UserData = await fetch("https://discord.com/api/v10/users/@me", {
-            method: "GET",
+        const UserData = await axios.get("https://discord.com/api/v10/users/@me", {
             headers: {
                 "Authorization": `${DiscordData.token_type} ${DiscordData.access_token}`
             }
-        
         })
 
-        const UserDataBody = await UserData.json() as any;
+        const UserDataBody = UserData.data;
         
         if (UserData.status !== 200)
             return (await QuickRevokeToken(res, DiscordData.access_token)).status(500).send("Failed to request user data from Discord's services.");
