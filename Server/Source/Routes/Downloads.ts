@@ -5,6 +5,7 @@ import { CreateBlurl } from "../Modules/BLURL";
 import { Song } from "../Schemas/Song";
 import { RequireAuthentication } from "../Modules/Middleware";
 import { UserPermissions } from "../Schemas/User";
+import path from "path";
 
 const App = Router();
 
@@ -77,11 +78,18 @@ async (req, res) => {
 });
 
 App.get("/:InternalID",
+(req, res, next) => {
+    // send back index.html when the internal id is not a uuid - causes issues with reloading on sub-pages otherwise
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(req.params.InternalID))
+        return res.sendFile(path.join(process.cwd(), "dist", "index.html"));
+
+    next();
+},
 RequireAuthentication(),
-async (req, res, next) => {
+async (req, res) => {
     const SongData = await Song.findOne({ where: [ { ID: req.params.InternalID }, { PID: req.params.InternalID } ], relations: { Author: true } });
     if (!SongData)
-        return next(); // trust me bro
+        return res.status(404).send("Track not found.");
 
     const IsPreview = SongData.ID != SongData.PID && req.params.InternalID == SongData.PID;
 
