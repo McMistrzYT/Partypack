@@ -53,17 +53,6 @@ export function Song({ data, children }: { data: any, children?: JSX.Element[] |
         )
     }
 
-    function GetLinkIcon() {
-        if (data.Status == SongStatus.PUBLIC || data.IsPublicDraft)
-        {
-            return <Link sx={{ cursor: "pointer", marginLeft: 1 }} onClick={() => {
-                navigator.clipboard.writeText(window.location.origin + "/song/" + data.ID);
-                toast("Copied song link to clipboard",{type:"success"})
-            }}><LinkIcon /></Link>
-        }
-        return <></>
-    }
-
     return (
         <Box sx={{ overflow: "hidden", minWidth: 50, maxWidth: 200, padding: 2, borderRadius: 10, border: "solid", borderColor: "border.default" }}>
             <img onError={e => (e.target as HTMLImageElement).src = DefaultCover} src={data.Cover} style={{ width: "100%", borderRadius: 10 }} />
@@ -74,7 +63,10 @@ export function Song({ data, children }: { data: any, children?: JSX.Element[] |
                     GetStatusLabel()
                 }
                 {
-                    GetLinkIcon()
+                    data.Status == SongStatus.PUBLIC || data.IsPublicDraft ? <Link sx={{ cursor: "pointer", marginLeft: 1 }} onClick={() => {
+                        navigator.clipboard.writeText(window.location.origin + "/song/" + data.ID);
+                        toast("Copied song link to clipboard",{type:"success"})
+                    }}><LinkIcon /></Link> : <></>
                 }
                 {
                     children ? <Divider /> : <></>

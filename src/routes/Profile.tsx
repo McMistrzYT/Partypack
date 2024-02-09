@@ -260,7 +260,7 @@ export function Profile() {
 												toast(Res.data, { type: Res.status === 200 ? "success" : "error" });
 											}}>{x.Status === SongStatus.DEFAULT ? "Submit for Review" : "Publish"}</Button>
 											<Button disabled={x.Status !== SongStatus.DEFAULT && x.Status !== SongStatus.AWAITING_REVIEW} sx={{ width: "100%", marginBottom: 1 }} onClick={async () => {
-												const Res = await axios.post("/api/drafts/makePublic", { TargetSong: x.ID });
+												const Res = await axios.post("/api/drafts/update/visibility", { TargetSong: x.ID, IsPublic: !x.IsPublicDraft});
 												if (Res.status === 200) {
 													x.IsPublicDraft = !x.IsPublicDraft;
 													draftsSongs[i] = x;

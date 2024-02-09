@@ -367,10 +367,11 @@ App.post("/submit",
         return res.send("Song has been submitted for approval by admins.");
     });
 
-App.post("/makePublic",
+App.post("/update/visibility",
     RequireAuthentication(),
     ValidateBody(j.object({
-        TargetSong: j.string().uuid().required()
+        TargetSong: j.string().uuid().required(),
+        IsPublic: j.boolean().required()
     })),
     async (req, res) => {
         const SongData = await Song.findOne({ where: { ID: req.body.TargetSong }, relations: { Author: true } })
@@ -383,12 +384,12 @@ App.post("/makePublic",
         if (!SongData.IsDraft)
             return res.status(400).send("This song has already been approved and published.");
 
-        var word = SongData.IsPublicDraft ? "private" : "public";
+        let word = req.body.IsPublic as boolean ? "public" : "private";
 
         if (SongData.Status !== SongStatus.DEFAULT && SongData.Status !== SongStatus.AWAITING_REVIEW)
             return res.status(400).send("You cannot make this draft " + word + " at this time.");
 
-        SongData.IsPublicDraft = !SongData.IsPublicDraft;
+        SongData.IsPublicDraft = req.body.IsPublic as boolean;
         await SongData.save();
 
         return res.send("Draft has been made " + word + ".");
