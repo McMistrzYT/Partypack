@@ -227,8 +227,10 @@ App.post("/upload/audio",
                         // Oh shit!! we need a preview stream!! so let's make one.
 
                         // Make a dir for it first
-                        if (!existsSync(`${AudioPath}/PreviewChunks`))
-                            mkdirSync(`${AudioPath}/PreviewChunks`, { recursive: true });
+                        if (existsSync(`${AudioPath}/PreviewChunks`))
+                            rmSync(`${AudioPath}/PreviewChunks`, { recursive: true });
+
+                        mkdirSync(`${AudioPath}/PreviewChunks`);
 
                         // Then, figure out which channels from the original file to put into each channel on the output file.
                         // We already ran ffprobe earlier so we can just reuse that lol
