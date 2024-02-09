@@ -78,7 +78,7 @@ export class Song extends BaseEntity {
     @Column()
     IsDraft: boolean;
 
-    @Column()
+    @Column({ default: false })
     IsPublicDraft: boolean;
 
     @Column({ default: false })
