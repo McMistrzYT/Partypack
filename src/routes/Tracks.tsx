@@ -12,7 +12,7 @@ export function Tracks() {
 
     useEffect(() => {
         (async () => {
-            const Discovery = await axios.get("/api/discovery");
+            const Discovery = await axios.get("/api/discovery", {headers: {"Song-Amount": new URLSearchParams(window.location.search).get('count')}});
             if (Discovery.status !== 200)
                 return toast(Discovery.data, { type: "error" });
 
@@ -21,6 +21,8 @@ export function Tracks() {
             const Bookmarks = await axios.get("/api/library/me");
             if (Bookmarks.status !== 200)
                 return// toast(Bookmarks.data, { type: "error" });
+
+            
 
             setBookmarks(Bookmarks.data.Bookmarks);
         })();
