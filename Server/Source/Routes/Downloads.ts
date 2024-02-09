@@ -21,7 +21,7 @@ async (req, res) => {
     const IsPreview = SongData.ID != SongData.PID && req.params.InternalID == SongData.PID;
     const ManifestPath = `${SongData.Directory}/${IsPreview ? `PreviewManifest.mpd` : `Manifest.mpd`}`;
     
-    if (SongData.IsDraft && (req.user!.PermissionLevel! < UserPermissions.VerifiedUser && SongData.Author.ID !== req.user!.ID))
+    if (SongData.IsDraft && !SongData.IsPublicDraft && (req.user!.PermissionLevel! < UserPermissions.VerifiedUser && SongData.Author.ID !== req.user!.ID))
         return res.status(403).send("You cannot use this track, because it's a draft.");
 
     const BaseURL = `${FULL_SERVER_ROOT}/song/download/${SongData.ID}/`;
@@ -85,7 +85,7 @@ async (req, res, next) => {
 
     const IsPreview = SongData.ID != SongData.PID && req.params.InternalID == SongData.PID;
 
-    if (SongData.IsDraft && ((req.user ? req.user.PermissionLevel < UserPermissions.VerifiedUser : true) && SongData.Author.ID !== req.user!.ID))
+    if (SongData.IsDraft && !SongData.IsPublicDraft && ((req.user ? req.user.PermissionLevel < UserPermissions.VerifiedUser : true) && SongData.Author.ID !== req.user!.ID))
         return res.status(403).send("You cannot use this track, because it's a draft.");
 
     const BaseURL = `${FULL_SERVER_ROOT}/song/download/${IsPreview ? SongData.PID : SongData.ID}/`;

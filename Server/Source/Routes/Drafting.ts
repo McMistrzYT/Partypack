@@ -54,6 +54,7 @@ App.post("/create",
         const SongData = await Song.create({
             ...req.body,
             IsDraft: true,
+            IsPublicDraft: false,
             Status: SongStatus.PROCESSING,
             Author: req.user!
         }).save();
@@ -88,6 +89,7 @@ App.post("/upload/midi",
             rmSync(`${SAVED_DATA_PATH}/Songs/${req.body.TargetSong}/Data.mid`);
             SongData.HasMidi = false;
             SongData.IsDraft = true;
+            SongData.IsPublicDraft = false;
             await SongData.save();
         }
 
@@ -127,6 +129,7 @@ App.post("/upload/cover",
             rmSync(`${SAVED_DATA_PATH}/Songs/${req.body.TargetSong}/Cover.png`);
             SongData.HasCover = false;
             SongData.IsDraft = true;
+            SongData.IsPublicDraft = false;
             await SongData.save();
         }
 
@@ -192,6 +195,7 @@ App.post("/upload/audio",
             rmSync(ChunksPath, { recursive: true });
             SongData.HasAudio = false;
             SongData.IsDraft = true;
+            SongData.IsPublicDraft = false;
             SongData.Status = SongStatus.PROCESSING;
             await SongData.save();
         }
@@ -347,6 +351,7 @@ App.post("/submit",
         if (SongData.Status === SongStatus.ACCEPTED) {
             SongData.Status = SongStatus.PUBLIC;
             SongData.IsDraft = false;
+            SongData.IsPublicDraft = false;
             await SongData.save();
 
             return res.send("Song has been published successfully.");
@@ -360,6 +365,33 @@ App.post("/submit",
         await SongData.save();
 
         return res.send("Song has been submitted for approval by admins.");
+    });
+
+App.post("/makePublic",
+    RequireAuthentication(),
+    ValidateBody(j.object({
+        TargetSong: j.string().uuid().required()
+    })),
+    async (req, res) => {
+        const SongData = await Song.findOne({ where: { ID: req.body.TargetSong }, relations: { Author: true } })
+        if (!SongData)
+            return res.status(404).send("The draft you're trying change visibility does not exist.");
+
+        if (SongData.Author.ID !== req.user!.ID)
+            return res.status(403).send("You don't have permission change this draft's visibility.");
+
+        if (!SongData.IsDraft)
+            return res.status(400).send("This song has already been approved and published.");
+
+        var word = SongData.IsPublicDraft ? "private" : "public";
+
+        if (SongData.Status !== SongStatus.DEFAULT && SongData.Status !== SongStatus.AWAITING_REVIEW)
+            return res.status(400).send("You cannot make this draft " + word + " at this time.");
+
+        SongData.IsPublicDraft = !SongData.IsPublicDraft;
+        await SongData.save();
+
+        return res.send("Draft has been made " + word + ".");
     });
 
 export default {

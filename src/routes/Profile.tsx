@@ -259,6 +259,16 @@ export function Profile() {
 												
 												toast(Res.data, { type: Res.status === 200 ? "success" : "error" });
 											}}>{x.Status === SongStatus.DEFAULT ? "Submit for Review" : "Publish"}</Button>
+											<Button disabled={x.Status !== SongStatus.DEFAULT && x.Status !== SongStatus.AWAITING_REVIEW} sx={{ width: "100%", marginBottom: 1 }} onClick={async () => {
+												const Res = await axios.post("/api/drafts/makePublic", { TargetSong: x.ID });
+												if (Res.status === 200) {
+													x.IsPublicDraft = !x.IsPublicDraft;
+													draftsSongs[i] = x;
+													setDraftsSongs([...draftsSongs]);
+												}
+												
+												toast(Res.data, { type: Res.status === 200 ? "success" : "error" });
+											}}>{!x.IsPublicDraft ? "Make draft Public" : "Make draft Private"}</Button>
 											<Button disabled={!state.UserDetails.IsAdmin && x.Status !== SongStatus.DEFAULT && x.Status !== SongStatus.DENIED && x.Status !== SongStatus.BROKEN} sx={{ width: "100%" }} variant="danger" onClick={async () => {
 												const Res = await axios.post("/api/drafts/delete", { TargetSong: x.ID });
 												if (Res.status === 200) {

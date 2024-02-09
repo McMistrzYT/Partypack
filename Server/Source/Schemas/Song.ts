@@ -78,6 +78,9 @@ export class Song extends BaseEntity {
     @Column()
     IsDraft: boolean;
 
+    @Column()
+    IsPublicDraft: boolean;
+
     @Column({ default: false })
     HasMidi: boolean;
 

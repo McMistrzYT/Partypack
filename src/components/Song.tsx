@@ -20,7 +20,9 @@ export function Song({ data, children }: { data: any, children?: JSX.Element[] |
             case SongStatus.DEFAULT:
                 // no label unless draft
                 Variant = "danger";
-                if (data.IsDraft)
+                if (data.IsPublicDraft)
+                    LabelStr = "Draft - public"
+                else if (data.IsDraft)
                     LabelStr = "Draft - not published"
                 break;
             case SongStatus.PUBLIC:
