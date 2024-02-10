@@ -43,7 +43,7 @@ export async function GenerateFortnitePages(ForUser: User | null): Promise<{ Suc
     }
 
     const AllSongs: { [key: string]: unknown } = {}; // too lazy to actually write a schema for this :D
-    const Overrides = ForUser.Library.map(x => { return { ...x, SongData: Song.findOne({ where: { ID: x.SongID } }) }; });
+    const Overrides = ForUser.Library.map(x => { return { ...x, SongData: Song.findOne({ where: { ID: x.SongID }, relations: { Author: true } }) }; });
     const UsersLibrary = await Promise.all(Overrides.map(x => x.SongData));
 
     for (const Song of UsersLibrary) 

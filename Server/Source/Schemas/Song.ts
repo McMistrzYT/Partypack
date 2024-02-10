@@ -105,7 +105,7 @@ export class Song extends BaseEntity {
     @OneToMany(() => Rating, R => R.Rated)
     Ratings: Rating[];
 
-    @ManyToMany(() => User, (user) => user.BookmarkedSongs)
+    @ManyToMany(() => User, U => U.BookmarkedSongs)
     BookmarkUsers: User[]
 
     @BeforeInsert()
