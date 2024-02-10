@@ -48,7 +48,8 @@ App.post("/create",
         VocalsDifficulty: j.number().required().min(0).max(6)
     })),
     async (req, res) => {
-        if (req.user!.CreatedTracks.length >= Number(MAX_AMOUNT_OF_DRAFTS_AT_ONCE))
+        // what the actual fuck is wrong with mc
+        if (req.user!.CreatedTracks.filter(item => item.IsDraft == true).length >= Number(MAX_AMOUNT_OF_DRAFTS_AT_ONCE))
             return res.status(400).send("You ran out of free draft spots. Please delete some first.");
 
         const SongData = await Song.create({
@@ -231,8 +232,10 @@ App.post("/upload/audio",
                         // Oh shit!! we need a preview stream!! so let's make one.
 
                         // Make a dir for it first
-                        if (!existsSync(`${AudioPath}/PreviewChunks`))
-                            mkdirSync(`${AudioPath}/PreviewChunks`, { recursive: true });
+                        if (existsSync(`${AudioPath}/PreviewChunks`))
+                            rmSync(`${AudioPath}/PreviewChunks`, { recursive: true });
+
+                        mkdirSync(`${AudioPath}/PreviewChunks`);
 
                         // Then, figure out which channels from the original file to put into each channel on the output file.
                         // We already ran ffprobe earlier so we can just reuse that lol
