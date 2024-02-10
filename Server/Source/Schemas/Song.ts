@@ -1,4 +1,4 @@
-import { BaseEntity, BeforeInsert, BeforeRemove, Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, BeforeInsert, BeforeRemove, Column, Entity, ManyToOne, OneToMany, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
 import { FULL_SERVER_ROOT, SAVED_DATA_PATH } from "../Modules/Constants";
 import { Rating } from "./Rating";
 import { existsSync, mkdirSync, rmSync } from "fs";
@@ -104,6 +104,9 @@ export class Song extends BaseEntity {
 
     @OneToMany(() => Rating, R => R.Rated)
     Ratings: Rating[];
+
+    @ManyToMany(() => User, (user) => user.BookmarkedSongs)
+    BookmarkUsers: User[]
 
     @BeforeInsert()
     Setup() {

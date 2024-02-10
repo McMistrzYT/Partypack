@@ -374,7 +374,7 @@ App.post("/update/visibility",
         IsPublic: j.boolean().required()
     })),
     async (req, res) => {
-        const SongData = await Song.findOne({ where: { ID: req.body.TargetSong }, relations: { Author: true } })
+        const SongData = await Song.findOne({ where: { ID: req.body.TargetSong }, relations: { Author: true, BookmarkUsers: true } })
         if (!SongData)
             return res.status(404).send("The draft you're trying change visibility does not exist.");
 
@@ -390,6 +390,14 @@ App.post("/update/visibility",
             return res.status(400).send("You cannot make this draft " + word + " at this time.");
 
         SongData.IsPublicDraft = req.body.IsPublic as boolean;
+
+        // remove bookmarks for that song if it is private again
+        if (!req.body.IsPublic)
+        {
+            SongData.BookmarkUsers = []
+            await SongData.save();
+        }
+
         await SongData.save();
 
         return res.send("Draft has been made " + word + ".");
