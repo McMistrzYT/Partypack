@@ -49,7 +49,7 @@ export function TrackSubmission() {
                         <ActionMenu.Button>{Key}</ActionMenu.Button>
                         <ActionMenu.Overlay width="medium">
                             {
-                                ["A", "Ab", "B", "Bb", "C", "Cb", "D", "Db", "E", "Eb", "F", "Fb", "G", "Gb"].map(x => {
+                                ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"].map(x => {
                                     return (
                                         <ActionList.Item onSelect={() => setKey(x)}>
                                             {x}
