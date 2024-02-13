@@ -175,13 +175,13 @@ export function TrackSubmission() {
                         return setWaiting(false);
 
                     const MidiRes = await axios.post("/api/drafts/upload/midi", { Data: Buffer.from(await Midi.arrayBuffer()).toString("hex"), TargetSong: SongData.data.ID });
-                    toast(MidiRes.status === 200 ? "Uploaded MIDI chart successfully." : MidiRes.data, { type: MidiRes.status === 200 ? "success" : "error" });
+                    toast(MidiRes.status === 200 ? "Uploaded MIDI chart successfully." : MidiRes.status === 413 ? "Your MIDI chart is too big to upload!" : MidiRes.data || MidiRes.statusText, { type: MidiRes.status === 200 ? "success" : "error" });
 
                     const CoverRes = await axios.post("/api/drafts/upload/cover", { Data: Buffer.from(await Cover.arrayBuffer()).toString("hex"), TargetSong: SongData.data.ID });
-                    toast(CoverRes.status === 200 ? "Uploaded cover image successfully." : CoverRes.data, { type: CoverRes.status === 200 ? "success" : "error" });
+                    toast(CoverRes.status === 200 ? "Uploaded cover image successfully." : CoverRes.status === 413 ? "Your cover image is too big to upload!" : CoverRes.data || CoverRes.statusText, { type: CoverRes.status === 200 ? "success" : "error" });
                     
                     const AudioRes = await axios.post("/api/drafts/upload/audio", { Data: Buffer.from(await Music.arrayBuffer()).toString("hex"), TargetSong: SongData.data.ID });
-                    toast(AudioRes.status === 200 ? "Uploaded audio for processing successfully." : AudioRes.data, { type: AudioRes.status === 200 ? "success" : "error" });
+                    toast(AudioRes.status === 200 ? "Uploaded audio for processing successfully." : AudioRes.status === 413 ? "Your audio image is too big to upload!" : AudioRes.data || AudioRes.statusText, { type: AudioRes.status === 200 ? "success" : "error" });
 
                     setWaiting(false);
                     toast("Finished processing song. You can now find it in your profile tab.");
