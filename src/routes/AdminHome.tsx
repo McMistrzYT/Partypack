@@ -1,4 +1,4 @@
-import { Box, Button, Text } from "@primer/react";
+import { Box, Button } from "@primer/react";
 import { PageHeader } from "@primer/react/drafts";
 import { useNavigate } from "react-router-dom";
 

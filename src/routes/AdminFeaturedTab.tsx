@@ -8,7 +8,7 @@ import axios from "axios";
 export interface LibraryObject {
     ID: string,
     Header: string,
-    Songs: unknown[],
+    Songs: { ID: string }[],
     Custom: boolean,
     Priority: number,
     ShouldDelete: boolean
