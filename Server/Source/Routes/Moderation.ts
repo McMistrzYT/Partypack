@@ -28,7 +28,7 @@ App.post("/submissions/:Action",
 PermsLevel(UserPermissions.TrackVerifier),
 ValidateBody(j.object({
     SongID: j.string().uuid().required(),
-    ReasonForDenial: j.string()
+    ReasonForDenial: j.string().required()
 })),
 async (req, res) => {
     const SongData = await Song.findOne({ where: { ID: req.body.SongID } });
@@ -47,8 +47,6 @@ async (req, res) => {
             break;
 
         case "deny":
-            if (!req.body.ReasonForDenial)
-                return res.status(400).send("Please fill in the reason for denial before denying a song.");
             SongData.Status = SongStatus.DENIED;
             SongData.ReasonForDenial = req.body.ReasonForDenial;
             break;
