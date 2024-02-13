@@ -19,7 +19,9 @@ export function Profile() {
 	const [, , removeCookie] = useCookies();
 	const [isActivateDialogOpen, setIsActivateDialogOpen] = useState<boolean>(false);
 	const [variant, setVariant] = useState<LabelColorOptions>("success");
+	const [reviewerVariant, setReviewerVariant] = useState<LabelColorOptions>("success");
 	const [labelText, setLabelText] = useState<string>("");
+	const [reviewerText, setReviewerText] = useState<string>("");
 	const [librarySongs, setLibrarySongs] = useState<unknown[]>([]);
 	const [bookmarkedSongs, setBookmarkedSongs] = useState<unknown[]>([]);
 	const [draftsSongs, setDraftsSongs] = useState<unknown[]>([]);
@@ -28,14 +30,11 @@ export function Profile() {
 	const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState<boolean>(false);
 	const [updating, setUpdating] = useState<unknown>({});
 
-	useEffect(() => {
-		if (state.UserDetails === undefined)
-			return;
-
+	function GetLabelStyle(Role: UserPermissions) {
 		let Variant: LabelColorOptions = "default";
 		let LabelText: string = "";
 
-		switch (state.UserDetails.Role) {
+		switch (Role) {
 			case UserPermissions.User:
 				Variant = "secondary";
 				LabelText = "User";
@@ -62,9 +61,28 @@ export function Profile() {
 				break;
 		}
 
+		return { Variant, LabelText }
+	}
+
+	useEffect(() => {
+		if (state.UserDetails === undefined)
+			return;
+
+		const { Variant, LabelText } = GetLabelStyle(state.UserDetails?.Role);
+
 		setVariant(Variant);
 		setLabelText(LabelText);
 	}, [state.UserDetails?.Role])
+
+	useEffect(() => {
+		if (!updating?.ReviewedBy)
+			return;
+
+		const { Variant, LabelText } = GetLabelStyle(updating?.ReviewedBy.PermissionLevel);
+
+		setReviewerVariant(Variant);
+		setReviewerText(LabelText);
+	}, [updating?.ReviewedBy])
 
 	useEffect(() => {
 		(async () => {
@@ -123,7 +141,7 @@ export function Profile() {
 										<p>Your song has been denied from being published by staff. In order to re-apply for publishing, please update your song. Keep in mind that rolling back to previous versions is not possible.</p>
 										<p style={{marginTop: 10}}><b>Reason for Denial: </b><Text>{updating.ReasonForDenial}</Text></p>
 										{
-											updating.ReviewedBy ? <p style={{marginTop: 10}}><b>Reviewed by: </b><Text>{updating.ReviewedBy.DisplayName}</Text></p> : <></>
+											updating.ReviewedBy ? <p style={{marginTop: 10}}><b>Reviewed by: </b><Text>{updating.ReviewedBy.DisplayName} (@{updating.ReviewedBy.Username})</Text><Label sx={{ alignSelf: "center", marginLeft: 2 }} size="small" variant={reviewerVariant}>{reviewerText}</Label></p> : <></>
 										}
 									</Text>
 									: <Text>Updating your song while it is published will unlist it and queue it for review. Keep in mind that rolling back to previous versions is not possible.</Text>
