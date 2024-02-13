@@ -28,15 +28,12 @@ App.post("/submissions/:Action",
 PermsLevel(UserPermissions.TrackVerifier),
 ValidateBody(j.object({
     SongID: j.string().uuid().required(),
-    ReasonForDenial: j.string().required()
+    ReasonForDenial: j.string()
 })),
 async (req, res) => {
     const SongData = await Song.findOne({ where: { ID: req.body.SongID } });
     if (!SongData)
         return res.status(404).send("This song does not exist anymore.");
-
-    if (req.params.Action !== "deny" && req.params.Action !== "accept")
-        return res.status(400).send("Invalid action requested.");
 
     if (SongData.Status !== SongStatus.AWAITING_REVIEW)
         return res.status(400).send("This song is no longer awaiting a review.");
@@ -47,9 +44,15 @@ async (req, res) => {
             break;
 
         case "deny":
+            if (typeof req.body.ReasonForDenial !== "string")
+                return res.status(400).send("Reason for denial is required.");
+            
             SongData.Status = SongStatus.DENIED;
             SongData.ReasonForDenial = req.body.ReasonForDenial;
             break;
+
+        default:
+            return res.status(400).send("Invalid action requested.");
     }
 
     SongData.ReviewSubmittedAt = new Date();
