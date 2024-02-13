@@ -10,6 +10,7 @@ export function Song({ data, children }: { data: any, children?: JSX.Element[] |
     function GetStatusLabel() {
         let Variant: LabelColorOptions = "default";
         let LabelStr = "";
+        let Title = "";
         switch (data.Status) {
             case SongStatus.AWAITING_REVIEW:
                 Variant = "accent";
@@ -42,6 +43,7 @@ export function Song({ data, children }: { data: any, children?: JSX.Element[] |
             case SongStatus.DENIED:
                 Variant = "danger";
                 LabelStr = "ACTION NEEDED - Denied";
+                Title = data.ReasonForDenial
                 break;
             //default:
                 //LabelStr = `Unimplemented: ${data.Status}`;
@@ -49,7 +51,7 @@ export function Song({ data, children }: { data: any, children?: JSX.Element[] |
         }
 
         return (
-            LabelStr !== "" ? <Label variant={Variant}>{LabelStr}</Label> : <></>
+            LabelStr !== "" ? <Label variant={Variant} title={Title}>{LabelStr}</Label> : <></>
         )
     }
 

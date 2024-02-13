@@ -76,7 +76,12 @@ App.get("/discord",
             Debug("Using Discord roles to determine user permission level since the Discord bot exists and is ready.");
 
             const Sewer = Bot.guilds.cache.get(DISCORD_SERVER_ID as string);
-            const Membuh = await Sewer?.members.fetch(UserDataBody.id);
+            let Membuh;
+            try {
+                Membuh = await Sewer?.members.fetch(UserDataBody.id)
+            } catch {
+                return res.status(400).send("Failed to log you in. Please make sure you joined this instance's Discord server, which is available on the navigation bar on the homepage.");
+            }
 
             if (Membuh) {
                 const RoulInDeightabaise = await DiscordRole.find({ where: { ID: In(Membuh.roles.cache.map(x => x.id)) }, order: { GrantedPermissions: "DESC" } });

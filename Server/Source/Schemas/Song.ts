@@ -108,6 +108,15 @@ export class Song extends BaseEntity {
     @ManyToMany(() => User, U => U.BookmarkedSongs)
     BookmarkUsers: User[]
 
+    @Column({ nullable: true })
+    ReasonForDenial?: string;
+
+    @ManyToOne(() => User, { nullable: true })
+    ReviewedBy?: User;
+
+    @Column({ nullable: true })
+    ReviewSubmittedAt?: Date;
+
     @BeforeInsert()
     Setup() {
         this.ID = v4();
@@ -133,6 +142,7 @@ export class Song extends BaseEntity {
             ...this,
             Status: IncludeStatus ? this.Status : SongStatus.DEFAULT,
             Author: this.Author ? this.Author.Package() : undefined,
+            ReviewedBy: this.ReviewedBy ? this.ReviewedBy.Package() : undefined,
             Directory: undefined, // we should NOT reveal that
             Midi: this.Midi ?? `${FULL_SERVER_ROOT}/song/download/${this.ID}/midi.mid`,
             Cover: this.Cover ?? `${FULL_SERVER_ROOT}/song/download/${this.ID}/cover.png`
