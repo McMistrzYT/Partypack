@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { Heading, Box, Button } from "@primer/react";
+import { Heading, Box, Button, Textarea } from "@primer/react";
 import axios from "axios";
 import { Song } from "../components/Song";
 
@@ -61,16 +61,23 @@ export function AdminSubmissions() {
 								else
 									toast(Res.data, { type: "error" })
 							}}>Approve</Button>
-							<Button sx={{ width: "100%" }} variant="danger" onClick={async () => { // TODO: reasons
-								const Res = await axios.post("/api/moderation/submissions/deny", { SongID: x.ID });
-								if (Res.status === 200)
-								{
-									submissions.splice(submissions.findIndex(y => y.ID === x.ID), 1);
-									setSubmissions([...submissions]);
-								}
+							<Button sx={{ width: "100%", marginBottom: 1 }} variant="danger" onClick={async () => {
+								let ReasonForDenial = document.getElementById("ReasonForDenial_" + x.ID).value
+								if (!ReasonForDenial)
+									toast("Please fill in the reason for denial before denying a song.", { type: "error" })
 								else
-									toast(Res.data, { type: "error" })
+								{
+									const Res = await axios.post("/api/moderation/submissions/deny", { SongID: x.ID, ReasonForDenial: ReasonForDenial });
+									if (Res.status === 200)
+									{
+										submissions.splice(submissions.findIndex(y => y.ID === x.ID), 1);
+										setSubmissions([...submissions]);
+									}
+									else
+										toast(Res.data, { type: "error" })
+								}
 							}}>Deny</Button>
+							<Textarea id={"ReasonForDenial_" + x.ID} sx={{ width: "100%" }} placeholder="Reason for denial... (Leave blank if approving)" />
 						</Song>
 					)
 				})

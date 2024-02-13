@@ -102,6 +102,15 @@ export class Song extends BaseEntity {
     @OneToMany(() => Rating, R => R.Rated)
     Ratings: Rating[];
 
+    @Column({ nullable: true })
+    ReasonForDenial?: string;
+
+    @ManyToOne(() => User, { nullable: true })
+    ReviewedBy?: User;
+
+    @Column({ nullable: true })
+    ReviewSubmittedAt?: Date;
+
     @BeforeInsert()
     Setup() {
         this.ID = v4();

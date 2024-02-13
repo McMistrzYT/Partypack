@@ -117,13 +117,17 @@ export function Profile() {
 						<Dialog isOpen={isUpdateDialogOpen} onDismiss={() => setIsUpdateDialogOpen(false)} aria-labelledby="header">
 							<Dialog.Header id="header">Update song</Dialog.Header>
 							<Box p={3}>
-								<Text>
-									{
-										updating.Status === SongStatus.DENIED ?
-											"Your song has been denied from being published by staff. In order to re-apply for publishing, please update your song. Your song could've been denied for many reasons, like overcharting, bad chart, spam or troll entry. To find out what the actual reason is, please contact an administrator. Keep in mind that rolling back to previous versions is not possible." :
-											"Updating your song while it is published will unlist it and queue it for review. Keep in mind that rolling back to previous versions is not possible."
-									}
-								</Text>
+								{
+									updating.Status === SongStatus.DENIED ?
+									<Text>
+										<p>Your song has been denied from being published by staff. In order to re-apply for publishing, please update your song. Keep in mind that rolling back to previous versions is not possible.</p>
+										<p style={{marginTop: 10}}><b>Reason for Denial: </b><Text>{updating.ReasonForDenial}</Text></p>
+										{
+											updating.ReviewedBy ? <p style={{marginTop: 10}}><b>Reviewed by: </b><Text>{updating.ReviewedBy.DisplayName}</Text></p> : <></>
+										}
+									</Text>
+									: <Text>Updating your song while it is published will unlist it and queue it for review. Keep in mind that rolling back to previous versions is not possible.</Text>
+								}
 								<form method="GET" action="" ref={formRef}>
 									<FormControl sx={formControlStyle}>
 										<FormControl.Label>MIDI File (.mid)</FormControl.Label>

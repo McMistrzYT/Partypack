@@ -8,7 +8,7 @@ import { AsyncFilter } from "../Modules/Extensions";
 
 const App = Router();
 
-App.get("/me", RequireAuthentication({ BookmarkedSongs: true, CreatedTracks: true }), async (req, res) => {
+App.get("/me", RequireAuthentication({ BookmarkedSongs: true, CreatedTracks: { ReviewedBy: { BookmarkedSongs: false }}}), async (req, res) => {
     const ProcessingTracks = req.user!.CreatedTracks.filter(x => x.Status === SongStatus.PROCESSING);
     // @ts-expect-error not gonna bother making type
     const NonExistingActiveTracks = await AsyncFilter(req.user!.Library, async x => !(await Song.exists({ where: { ID: x.SongID } })));
