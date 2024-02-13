@@ -6,7 +6,7 @@ import { Song } from "../components/Song";
 import { useNavigate } from "react-router-dom";
 
 export function AdminTrackList() {
-    const [tracks, setTracks] = useState<unknown[]>([]);
+    const [tracks, setTracks] = useState<{ ID: string }[]>([]);
     const navigate = useNavigate();
 
     useEffect(() => {

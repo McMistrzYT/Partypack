@@ -6,8 +6,8 @@ import { toast } from "react-toastify";
 import { SiteContext } from "../utils/State";
 
 export function Tracks() {
-    const [trackData, setTrackData] = useState<{ Header: string, Songs: unknown[] }[]>([]);
-    const [bookmarks, setBookmarks] = useState<unknown[]>([]);
+    const [trackData, setTrackData] = useState<{ Header: string, Songs: { ID: string }[] }[]>([]);
+    const [bookmarks, setBookmarks] = useState<{ ID: string }[]>([]);
     const {state} = useContext(SiteContext);
 
     useEffect(() => {

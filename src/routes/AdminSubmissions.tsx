@@ -5,8 +5,8 @@ import axios from "axios";
 import { Song } from "../components/Song";
 
 export function AdminSubmissions() {
-	const [submissions, setSubmissions] = useState<unknown[]>([]);
-	const [bookmarks, setBookmarks] = useState<unknown[]>([]);
+	const [submissions, setSubmissions] = useState<{ ID: string }[]>([]);
+	const [bookmarks, setBookmarks] = useState<{ ID: string }[]>([]);
 
     useEffect(() => {
 		(async () => {

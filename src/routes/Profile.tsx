@@ -22,13 +22,13 @@ export function Profile() {
 	const [reviewerVariant, setReviewerVariant] = useState<LabelColorOptions>("success");
 	const [labelText, setLabelText] = useState<string>("");
 	const [reviewerText, setReviewerText] = useState<string>("");
-	const [librarySongs, setLibrarySongs] = useState<unknown[]>([]);
-	const [bookmarkedSongs, setBookmarkedSongs] = useState<unknown[]>([]);
-	const [draftsSongs, setDraftsSongs] = useState<unknown[]>([]);
+	const [librarySongs, setLibrarySongs] = useState<{ ID: string, Override: string }[]>([]);
+	const [bookmarkedSongs, setBookmarkedSongs] = useState<{ ID: string }[]>([]);
+	const [draftsSongs, setDraftsSongs] = useState<{ ID: string, Status: SongStatus }[]>([]);
 	const [availableOverrides, setAvailableOverrides] = useState<{ Name: string, Template: string }[]>([]);
-	const [overriding, setOverriding] = useState<unknown>({});
+	const [overriding, setOverriding] = useState<{ ID: string }>({ ID: "" });
 	const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState<boolean>(false);
-	const [updating, setUpdating] = useState<unknown>({});
+	const [updating, setUpdating] = useState<{ Status: SongStatus, ID: string, ReasonForDenial?: string, ReviewedBy?: { PermissionLevel: UserPermissions, Username: string, DisplayName: string } }>({ Status: SongStatus.DEFAULT, ID: "", ReasonForDenial: "", ReviewedBy: null });
 
 	function GetLabelStyle(Role: UserPermissions) {
 		let Variant: LabelColorOptions = "default";
