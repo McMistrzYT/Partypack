@@ -28,7 +28,7 @@ export function Profile() {
 	const [availableOverrides, setAvailableOverrides] = useState<{ Name: string, Template: string }[]>([]);
 	const [overriding, setOverriding] = useState<{ ID: string }>({ ID: "" });
 	const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState<boolean>(false);
-	const [updating, setUpdating] = useState<{ Status: SongStatus, ID: string }>({ Status: SongStatus.DEFAULT, ID: "" });
+	const [updating, setUpdating] = useState<{ Status: SongStatus, ID: string, ReasonForDenial?: string, ReviewedBy?: { PermissionLevel: UserPermissions, Username: string, DisplayName: string } }>({ Status: SongStatus.DEFAULT, ID: "", ReasonForDenial: "", ReviewedBy: null });
 
 	function GetLabelStyle(Role: UserPermissions) {
 		let Variant: LabelColorOptions = "default";
