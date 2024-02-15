@@ -54,9 +54,6 @@ export class Song extends BaseEntity {
     @Column()
     Tempo: number;
 
-    @Column()
-    Directory: string;
-
     @Column({ nullable: true })
     Midi?: string;
 
@@ -118,17 +115,17 @@ export class Song extends BaseEntity {
         if (this.PID === undefined) // im lazy but this will work regardless
             this.PID = this.ID; // By default they should be the same to save space, if we *need* a preview stream later we can change this when processing audio
 
-        this.Directory = `${SAVED_DATA_PATH}/Songs/${this.ID}`;
-        if (!existsSync(join(this.Directory, "Chunks")))
-            mkdirSync(join(this.Directory, "Chunks"), { recursive: true });
+        //this.Directory = `${SAVED_DATA_PATH}/Songs/${this.ID}`;
+        if (!existsSync(join(`${SAVED_DATA_PATH}/Songs/${this.ID}/Chunks`)))
+            mkdirSync(join(`${SAVED_DATA_PATH}/Songs/${this.ID}/Chunks`), { recursive: true });
 
         this.CreationDate = new Date();
     }
 
     @BeforeRemove()
     Delete() {
-        if (existsSync(this.Directory) && this.Directory.endsWith(this.ID))
-            rmSync(this.Directory, { recursive: true, force: true }); // lets hope this does not cause steam launcher for linux 2.0
+        if (existsSync(`${SAVED_DATA_PATH}/Songs/${this.ID}`))
+            rmSync(`${SAVED_DATA_PATH}/Songs/${this.ID}`, { recursive: true, force: true }); // lets hope this does not cause steam launcher for linux 2.0
     }
 
     public Package(IncludeStatus: boolean = false) {

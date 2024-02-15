@@ -1,7 +1,7 @@
 export const ENVIRONMENT = process.env.ENVIRONMENT ?? "dev";
 export const IS_DEBUG = ENVIRONMENT.toLowerCase() === "dev" || ENVIRONMENT.toLowerCase() === "stage"; // IS_DEBUG can be used to enable test endpoints, unsafe code and more.
 
-export const SAVED_DATA_PATH = ENVIRONMENT.toLowerCase() === "prod" || ENVIRONMENT.toLowerCase() === "stage" ? "../Saved" : "./Saved";
+export const SAVED_DATA_PATH = process.env.SAVED_DIRECTORY as string;
 export const PROJECT_NAME = process.env.PROJECT_NAME ?? "BasedServer"; // Default prefix for the logger module.
 export const BODY_SIZE_LIMIT = process.env.BODY_SIZE_LIMIT ?? "10mb"; // Doesn't accept requests with body sizes larger than this value.
 export const SERVER_URL = process.env.SERVER_URL ?? "localhost"; // The server's URL. Not used for a lot by default.

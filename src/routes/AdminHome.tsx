@@ -15,6 +15,7 @@ export function AdminHome() {
                     Welcome! Please select a management page you'd like to visit:
                     <Button onClick={() => navigate("/admin/tracks")}>Tracks</Button>
                     <Button onClick={() => navigate("/admin/featured")}>Discovery</Button>
+                    <Button onClick={() => navigate("/admin/roles")}>Role Permission Overrides</Button>
                 </PageHeader.Description>
             </PageHeader>
         </Box>
