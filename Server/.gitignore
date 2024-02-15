@@ -137,4 +137,4 @@ bin/
 *.db-shm
 *.db-wal
 
-Saved/Songs
+Saved/*
