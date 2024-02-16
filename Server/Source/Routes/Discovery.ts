@@ -13,10 +13,18 @@ App.get("/", async (req, res) => {
         Priority: 100,
         Custom: false
     }
+    const All = { // TEMPORARY
+        ID: "all",
+        Header: "All songs",
+        Songs: (await Song.find({ where: { IsDraft: false }, take: 200, order: { CreationDate: "DESC" } })).map(x => x.Package()),
+        Priority: 200,
+        Custom: false
+    }
 
     res.json([
         ...ForcedCategories.map(x => { return { ...x, Custom: true, Songs: x.Songs.map(y => y.Package()) }; }),
-        New
+        New,
+        All
     ].sort((a, b) => a.Priority - b.Priority))
 });
 

@@ -22,6 +22,9 @@ async function Initialize() {
     if (!existsSync(SAVED_DATA_PATH) || !existsSync(`${SAVED_DATA_PATH}/Songs`))
         mkdirSync(`${SAVED_DATA_PATH}/Songs`, { recursive: true });
 
+    if (!existsSync(`${SAVED_DATA_PATH}/Cache`))
+        mkdirSync(`${SAVED_DATA_PATH}/Cache`, { recursive: true });
+
     Debug(`The CWD is ${magenta(process.cwd())}.`);
 
     const Files = fs

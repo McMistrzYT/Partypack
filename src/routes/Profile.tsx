@@ -10,79 +10,69 @@ import { Song } from "../components/Song";
 import { toast } from "react-toastify";
 import { SongStatus, UserPermissions } from "../utils/Extensions";
 import { LabelColorOptions } from "@primer/react/lib-esm/Label/Label";
+import { BetterSystemStyleObject } from "@primer/react/lib-esm/sx";
 
 const formControlStyle = { paddingTop: 3 };
+
+export function GetPermissionLevelString(Role: UserPermissions) {
+	switch (Role) {
+		case UserPermissions.User:
+			return "User";
+		
+		case UserPermissions.VerifiedUser:
+			return "Verified Track Creator";
+
+		case UserPermissions.TrackVerifier:
+			return "Track Verifier";
+
+		case UserPermissions.Moderator:
+			return "Moderator";
+
+		case UserPermissions.Administrator:
+			return "Administrator";
+	}
+}
+
+export function GetLabelStyle(Role: UserPermissions, Style: BetterSystemStyleObject, Size: "small" | "large" = "large") {
+	let Variant: LabelColorOptions = "default";
+
+	switch (Role) {
+		case UserPermissions.User:
+			Variant = "secondary";
+			break;
+		
+		case UserPermissions.VerifiedUser:
+			Variant = "success";
+			break;
+
+		case UserPermissions.TrackVerifier:
+			Variant = "done";
+			break;
+
+		case UserPermissions.Moderator:
+			Variant = "accent";
+			break;
+
+		case UserPermissions.Administrator:
+			Variant = "danger";
+			break;
+	}
+
+	return <Label sx={Style} size={Size} variant={Variant}>{GetPermissionLevelString(Role)}</Label>
+}
 
 export function Profile() {
 	const formRef = useRef<HTMLFormElement>(null);
 	const { state, setState } = useContext(SiteContext);
 	const [, , removeCookie] = useCookies();
 	const [isActivateDialogOpen, setIsActivateDialogOpen] = useState<boolean>(false);
-	const [variant, setVariant] = useState<LabelColorOptions>("success");
-	const [reviewerVariant, setReviewerVariant] = useState<LabelColorOptions>("success");
-	const [labelText, setLabelText] = useState<string>("");
-	const [reviewerText, setReviewerText] = useState<string>("");
-	const [librarySongs, setLibrarySongs] = useState<unknown[]>([]);
-	const [bookmarkedSongs, setBookmarkedSongs] = useState<unknown[]>([]);
-	const [draftsSongs, setDraftsSongs] = useState<unknown[]>([]);
+	const [librarySongs, setLibrarySongs] = useState<{ ID: string, Override: string }[]>([]);
+	const [bookmarkedSongs, setBookmarkedSongs] = useState<{ ID: string }[]>([]);
+	const [draftsSongs, setDraftsSongs] = useState<{ ID: string, Status: SongStatus }[]>([]);
 	const [availableOverrides, setAvailableOverrides] = useState<{ Name: string, Template: string }[]>([]);
-	const [overriding, setOverriding] = useState<unknown>({});
+	const [overriding, setOverriding] = useState<{ ID: string }>({ ID: "" });
 	const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState<boolean>(false);
-	const [updating, setUpdating] = useState<unknown>({});
-
-	function GetLabelStyle(Role: UserPermissions) {
-		let Variant: LabelColorOptions = "default";
-		let LabelText: string = "";
-
-		switch (Role) {
-			case UserPermissions.User:
-				Variant = "secondary";
-				LabelText = "User";
-				break;
-			
-			case UserPermissions.VerifiedUser:
-				Variant = "success";
-				LabelText = "Verified Track Creator";
-				break;
-
-			case UserPermissions.TrackVerifier:
-				Variant = "done";
-				LabelText = "Track Verifier";
-				break;
-
-			case UserPermissions.Moderator:
-				Variant = "accent";
-				LabelText = "Moderator";
-				break;
-
-			case UserPermissions.Administrator:
-				Variant = "danger";
-				LabelText = "Administrator";
-				break;
-		}
-
-		return { Variant, LabelText }
-	}
-
-	useEffect(() => {
-		if (state.UserDetails === undefined)
-			return;
-
-		const { Variant, LabelText } = GetLabelStyle(state.UserDetails?.Role);
-
-		setVariant(Variant);
-		setLabelText(LabelText);
-	}, [state.UserDetails?.Role])
-
-	useEffect(() => {
-		if (!updating?.ReviewedBy)
-			return;
-
-		const { Variant, LabelText } = GetLabelStyle(updating?.ReviewedBy.PermissionLevel);
-
-		setReviewerVariant(Variant);
-		setReviewerText(LabelText);
-	}, [updating?.ReviewedBy])
+	const [updating, setUpdating] = useState<{ Status: SongStatus, ID: string, ReasonForDenial?: string, ReviewedBy?: { PermissionLevel: UserPermissions, Username: string, DisplayName: string } }>({ Status: SongStatus.DEFAULT, ID: "", ReasonForDenial: "", ReviewedBy: null });
 
 	useEffect(() => {
 		(async () => {
@@ -122,7 +112,7 @@ export function Profile() {
 								</PageHeader.LeadingVisual>
 								<PageHeader.Title>
 									{state.UserDetails.GlobalName} (@{state.UserDetails.Username})
-									<Label sx={{ alignSelf: "center", marginLeft: 2 }} size="large" variant={variant}>{labelText}</Label>
+									{ GetLabelStyle(state.UserDetails?.Role, { alignSelf: "center", marginLeft: 2 }) }
 								</PageHeader.Title>
 								<PageHeader.Actions>
 									<Button size="large" variant="danger" onClick={() => { removeCookie("UserDetails"); removeCookie("Token"); setState({ ...state, UserDetails: null }); window.location.assign("/") }}>Log out</Button>
@@ -141,7 +131,7 @@ export function Profile() {
 										<p>Your song has been denied from being published by staff. In order to re-apply for publishing, please update your song. Keep in mind that rolling back to previous versions is not possible.</p>
 										<p style={{marginTop: 10}}><b>Reason for Denial: </b><Text>{updating.ReasonForDenial}</Text></p>
 										{
-											updating.ReviewedBy ? <p style={{marginTop: 10}}><b>Reviewed by: </b><Text>{updating.ReviewedBy.DisplayName} (@{updating.ReviewedBy.Username})</Text><Label sx={{ alignSelf: "center", marginLeft: 2 }} size="small" variant={reviewerVariant}>{reviewerText}</Label></p> : <></>
+											updating.ReviewedBy ? <p style={{marginTop: 10}}><b>Reviewed by: </b><Text>{updating.ReviewedBy.DisplayName} (@{updating.ReviewedBy.Username})</Text>{ GetLabelStyle(updating.ReviewedBy.PermissionLevel, { alignSelf: "center", marginLeft: 2 }, "small") }</p> : <></>
 										}
 									</Text>
 									: <Text>Updating your song while it is published will unlist it and queue it for review. Keep in mind that rolling back to previous versions is not possible.</Text>

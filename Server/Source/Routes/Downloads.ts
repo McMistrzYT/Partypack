@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { existsSync, readFileSync } from "fs";
-import { FULL_SERVER_ROOT } from "../Modules/Constants";
+import { FULL_SERVER_ROOT, SAVED_DATA_PATH } from "../Modules/Constants";
 import { CreateBlurl } from "../Modules/BLURL";
 import { Song } from "../Schemas/Song";
 import { RequireAuthentication } from "../Modules/Middleware";
@@ -20,7 +20,7 @@ async (req, res) => {
         return res.status(404).send("Song not found.");
 
     const IsPreview = SongData.ID != SongData.PID && req.params.InternalID == SongData.PID;
-    const ManifestPath = `${SongData.Directory}/${IsPreview ? `PreviewManifest.mpd` : `Manifest.mpd`}`;
+    const ManifestPath = `${SAVED_DATA_PATH}/Songs/${SongData.ID}/${IsPreview ? `PreviewManifest.mpd` : `Manifest.mpd`}`;
     
     if (SongData.IsDraft && !SongData.IsPublicDraft && (req.user!.PermissionLevel! < UserPermissions.VerifiedUser && SongData.Author.ID !== req.user!.ID))
         return res.status(403).send("You cannot use this track, because it's a draft.");
@@ -50,17 +50,17 @@ async (req, res) => {
         
         case "cover":
         case "cover.png":
-            return existsSync(`${SongData.Directory}/Cover.png`) ? res.set("content-type", "image/png").send(readFileSync(`${SongData.Directory}/Cover.png`)) : res.sendStatus(404);
+            return existsSync(`${SAVED_DATA_PATH}/Songs/${SongData.ID}/Cover.png`) ? res.set("content-type", "image/png").send(readFileSync(`${SAVED_DATA_PATH}/Songs/${SongData.ID}/Cover.png`)) : res.sendStatus(404);
 
         // ! we are not risking a lawsuit
         //case "midi.dat": // dont forget to encrypt!
-            //return existsSync(`${Song.Directory}/Data.mid`) ? res.set("content-type", "application/octet-stream").send(AesEncrypt(readFileSync(`${Song.Directory}/Data.mid`))) : res.sendStatus(404);
+            //return existsSync(`${SAVED_DATA_PATH}/Songs/${SongData.ID}/Data.mid`) ? res.set("content-type", "application/octet-stream").send(AesEncrypt(readFileSync(`${SAVED_DATA_PATH}/Songs/${SongData.ID}/Data.mid`))) : res.sendStatus(404);
 
         // funny little tip: you dont actually need to encrypt midis LMFAO
         case "midi":
         case "midi.mid":
         case "midi.midi": // forget to encrypt!
-            return existsSync(`${SongData.Directory}/Data.mid`) ? res.set("content-type", "application/octet-stream").send(readFileSync(`${SongData.Directory}/Data.mid`)) : res.sendStatus(404);
+            return existsSync(`${SAVED_DATA_PATH}/Songs/${SongData.ID}/Data.mid`) ? res.set("content-type", "application/octet-stream").send(readFileSync(`${SAVED_DATA_PATH}/Songs/${SongData.ID}/Data.mid`)) : res.sendStatus(404);
     }
     
     if (!/^[\w\-.]+$/g.test(req.params.File))
@@ -69,7 +69,7 @@ async (req, res) => {
     if (!req.params.File.endsWith(".m4s") && !req.params.File.endsWith(".webm"))
         return res.sendStatus(403);
 
-    const ChunkPath = `${SongData.Directory}/${IsPreview ? `PreviewChunks` : `Chunks`}/${req.params.File}`
+    const ChunkPath = `${SAVED_DATA_PATH}/Songs/${SongData.ID}/${IsPreview ? `PreviewChunks` : `Chunks`}/${req.params.File}`
     if (!existsSync(ChunkPath))
         return res.sendStatus(404);
 
@@ -99,7 +99,7 @@ async (req, res) => {
     const BaseURL = `${FULL_SERVER_ROOT}/song/download/${IsPreview ? SongData.PID : SongData.ID}/`;
     res.set("content-type", "application/json");
     res.json({
-        playlist: Buffer.from(readFileSync(`${SongData.Directory}/${IsPreview ? `PreviewManifest.mpd` : `Manifest.mpd`}`).toString().replaceAll("{BASEURL}", BaseURL)).toString("base64"),
+        playlist: Buffer.from(readFileSync(`${SAVED_DATA_PATH}/Songs/${SongData.ID}/${IsPreview ? `PreviewManifest.mpd` : `Manifest.mpd`}`).toString().replaceAll("{BASEURL}", BaseURL)).toString("base64"),
         playlistType: "application/dash+xml",
         metadata: {
             assetId: "",

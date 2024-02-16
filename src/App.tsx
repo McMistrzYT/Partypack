@@ -15,8 +15,10 @@ import { TrackSubmission } from "./routes/TrackSubmission";
 import { Profile } from "./routes/Profile";
 import { NotFound } from "./routes/404";
 import { Credits } from "./routes/Credits";
+import { FrequentlyAskedQuestions } from "./routes/FrequentlyAskedQuestions";
 import { AdminHome } from "./routes/AdminHome";
 import { AdminTrackList } from "./routes/AdminTrackList";
+import { AdminPermissionRoles } from "./routes/AdminPermissionRoles";
 import { AdminSubmissions } from "./routes/AdminSubmissions";
 import { AdminFeaturedTab } from "./routes/AdminFeaturedTab";
 import { SiteContext, SiteState } from "./utils/State";
@@ -24,7 +26,6 @@ import merge from "deepmerge";
 
 import "react-toastify/dist/ReactToastify.css";
 import "./css/index.css";
-import { FrequentlyAskedQuestions } from "./routes/FrequentlyAskedQuestions";
 
 const DefaultTheme = merge(theme, {}); // we'll use this!! eventually!!!
 
@@ -58,6 +59,7 @@ function App() {
 									{/* Admin routes */}
 									<Route path="/admin" element={<VerifyAdmin><AdminHome /></VerifyAdmin>} />
 									<Route path="/admin/tracks" element={<VerifyAdmin><AdminTrackList /></VerifyAdmin>} />
+									<Route path="/admin/roles" element={<VerifyAdmin><AdminPermissionRoles /></VerifyAdmin>} />
 									<Route path="/admin/featured" element={<VerifyAdmin><AdminFeaturedTab /></VerifyAdmin>} />
 								</Routes>
 							</div>

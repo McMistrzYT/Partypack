@@ -26,15 +26,11 @@ export function AdminCategory({ categoryName, songs, isForced, moveUp, moveDown,
                     }
                 </Box>
             </Box>
-            {
-
-            }
             <Box p={1} className="songCategory">
                 {
                     songs.map(x => <Song data={x} />)
                 }
             </Box>
-            
         </Box>
     )
 }

@@ -241,9 +241,9 @@ App.post("/upload/audio",
                         // We already ran ffprobe earlier so we can just reuse that lol
 
                         // Output with 10 channels is "pan=stereo|c0=c0+c2+c4+c6+c8|c1=c1+c3+c5+c7+c9", ffmpeg uses this to decide how to downmix
-                        var FilterLeft = "pan=stereo|c0=";
-                        var FilterRight = "|c1=";
-                        for (var i = 0; i < metadata.streams[0].channels!; i++)
+                        let FilterLeft = "pan=stereo|c0=";
+                        let FilterRight = "|c1=";
+                        for (let i = 0; i < metadata.streams[0].channels!; i++)
                         {
                             if (i == 0 || i % 2 == 0)
                                 FilterLeft += `${i == 0 ? "" : "+"}c${i}` // out for 0 = "c0", out for 2 = "+c2"

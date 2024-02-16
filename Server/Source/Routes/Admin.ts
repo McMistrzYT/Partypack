@@ -27,7 +27,7 @@ App.use((req, res, next) => {
 App.post("/create/role",
 ValidateBody(j.object({
     ID: j.string().min(10).max(32).required(),
-    Comment: j.string().max(128).optional(),
+    Comment: j.string().min(0).max(128).optional(),
     PermissionLevel: j.number().valid(...(Object.values(UserPermissions).filter(x => !isNaN(Number(x))))).required()
 })),
 async (req, res) => {
@@ -67,6 +67,7 @@ async (req, res) => {
     res.send("Removed role successfully.");
 })
 
+App.get("/discord/roles", async (_, res) => res.json(await Bot.guilds.cache.get(DISCORD_SERVER_ID!)?.roles.cache.sort((a, b) => b.position - a.position).map(x => { return { id: x.id, name: x.name } })));
 App.get("/roles", async (_, res) => res.json((await DiscordRole.find()).map(x => x.Package(true))));
 App.get("/tracks", async (_, res) => res.json((await Song.find()).map(x => x.Package(true))));
 

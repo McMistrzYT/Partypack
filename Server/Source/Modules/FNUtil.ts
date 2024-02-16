@@ -1,10 +1,11 @@
 import axios from "axios";
 import { Err } from "./Logger";
 import { red } from "colorette";
-import { FULL_SERVER_ROOT } from "./Constants";
+import { FULL_SERVER_ROOT, SAVED_DATA_PATH } from "./Constants";
 import { User } from "../Schemas/User";
 import { Song } from "../Schemas/Song";
 import { UserPermissions } from "../Schemas/User";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 
 export let FullFortnitePages: { [key: string]: any } | null = null;
 export let OriginalSparks: {[key: string]: any} | null = null;
@@ -13,13 +14,14 @@ let LastContentDownloadDate: Date = new Date(0); // set it to 1970 as default cu
 GenerateFortnitePages(null);
 
 export async function GenerateFortnitePages(ForUser: User | null): Promise<{ Success: boolean, FNPages: { [key: string]: unknown } | null }> {
+    const ShouldReload = Date.now() > LastContentDownloadDate.getTime() + 30 * 60 * 1000;
     const { status, data } = // check if 30 minutes have passed since last content update. if so, get a new copy of pages, if not, fuck off
-        FullFortnitePages === null || Date.now() > LastContentDownloadDate.getTime() + 30 * 60 * 1000 ?
+        FullFortnitePages === null || ShouldReload ?
             await axios.get("https://fortnitecontent-website-prod07.ol.epicgames.com/content/api/pages/fortnite-game") :
             { status: 200, data: FullFortnitePages };
     
-    const OGSparks =
-        OriginalSparks === null || Date.now() > LastContentDownloadDate.getTime() + 30 * 60 * 1000 ?
+    let OGSparks =
+        OriginalSparks === null || ShouldReload ?
             await axios.get("https://fortnitecontent-website-prod07.ol.epicgames.com/content/api/pages/fortnite-game/spark-tracks") :
             { status: 200, data: OriginalSparks };
 
@@ -33,14 +35,30 @@ export async function GenerateFortnitePages(ForUser: User | null): Promise<{ Suc
     OriginalSparks = OGSparks.data;
     LastContentDownloadDate = new Date();
 
-    if (!ForUser)
-        return { Success: true, FNPages: null };
-
     if (status !== 200 || OGSparks.status !== 200) {
         Err(`Failed to get Fortnite pages: ${red(status)}, ${red(OGSparks.status)}`);
         console.log(data);
-        process.exit(-1); // very big fuck moment, we literally cannot run the server without fortnitepages
+
+        if (OGSparks.status !== 200 && existsSync(`${SAVED_DATA_PATH}/Cache/Sparks.json`))
+            OGSparks = { status: 200, data: JSON.parse(readFileSync(`${SAVED_DATA_PATH}/Cache/Sparks.json`).toString()) }
+
+        if (status !== 200 && existsSync(`${SAVED_DATA_PATH}/Cache/Pages.json`)) {
+            const CachedPages = JSON.parse(readFileSync(`${SAVED_DATA_PATH}/Cache/Pages.json`).toString());
+            FullFortnitePages = {
+                ...CachedPages,
+                sparkTracks: {
+                    ...CachedPages.sparkTracks,
+                    lastModified: new Date().toISOString()
+                }
+            };
+        }
+    } else if (ShouldReload) {
+        writeFileSync(`${SAVED_DATA_PATH}/Cache/Pages.json`, JSON.stringify(data));
+        writeFileSync(`${SAVED_DATA_PATH}/Cache/Sparks.json`, JSON.stringify(OGSparks.data));
     }
+
+    if (!ForUser)
+        return { Success: true, FNPages: null };
 
     const AllSongs: { [key: string]: unknown } = {}; // too lazy to actually write a schema for this :D
     const Overrides = ForUser.Library.map(x => { return { ...x, SongData: Song.findOne({ where: { ID: x.SongID }, relations: { Author: true } }) }; });

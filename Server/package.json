@@ -13,7 +13,7 @@
     "format": "prettier --write ./Source && eslint ./Source --ext .ts --fix"
   },
   "nodemonConfig": {
-    "ext": "*.ts,*.json,*.env",
+    "ext": "*.ts,*.env",
     "ignore": [
       "bin/**",
       "thunder_tests/**"
