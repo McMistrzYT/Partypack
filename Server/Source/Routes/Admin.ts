@@ -8,6 +8,7 @@ import { ForcedCategory } from "../Schemas/ForcedCategory";
 import { DiscordRole } from "../Schemas/DiscordRole";
 import { Bot } from "../Handlers/DiscordBot";
 import { DISCORD_SERVER_ID } from "../Modules/Constants";
+import { MisconfiguredDiscordBot, MissingDatabaseRole, MissingServerRole, MissingPermissions } from "../Modules/Errors";
 
 const App = Router();
 
@@ -19,8 +20,8 @@ App.use(RequireAuthentication());
 
 App.use((req, res, next) => {
     if (req.user!.PermissionLevel! < UserPermissions.Administrator)
-        return res.status(403).send("You don't have permission to access this endpoint.");
-
+        //return res.status(403).send("You don't have permission to access this endpoint.");
+        return res.status(403).json(new MissingPermissions().errorJSON()).set('X-PartyPacker-ErrorString', new MissingPermissions().errorString());
     next();
 });
 
@@ -32,10 +33,11 @@ ValidateBody(j.object({
 })),
 async (req, res) => {
     if (!Bot.isReady())
-        return res.status(500).send("This Partypack instance has a misconfigured Discord bot.");
-
+        //return res.status(503).send("This Partypack instance has a misconfigured Discord bot.");
+        return res.status(503).json(new MisconfiguredDiscordBot().errorJSON()).set('X-PartyPacker-ErrorString', new MisconfiguredDiscordBot().errorString());
     if (!Bot.guilds.cache.get(DISCORD_SERVER_ID as string)?.roles.cache.has(req.body.ID))
-        return res.status(404).send("This role does not exist in the Discord server.");
+        //return res.status(400).send("This role does not exist in the Discord server.");
+        return res.status(400).json(new MissingServerRole().errorJSON()).set('X-PartyPacker-ErrorString', new MissingServerRole().errorString());
 
     const Existing = await DiscordRole.findOne({ where: { ID: req.body.ID } });
     if (Existing) {
@@ -61,10 +63,12 @@ ValidateBody(j.object({
 async (req, res) => {
     const RoleData = await DiscordRole.findOne({ where: { ID: req.body.ID } });
     if (!RoleData)
-        return res.status(404).send("This role does not exist in the database.");
+        //return res.status(404).json(new MissingDatabaseRole());
+        return res.status(404).json(new MissingDatabaseRole().errorJSON()).set('X-PartyPacker-ErrorString', new MissingDatabaseRole().errorString());
+
 
     await RoleData.remove();
-    res.send("Removed role successfully.");
+    res.send.status(204);
 })
 
 App.get("/discord/roles", async (_, res) => res.json(await Bot.guilds.cache.get(DISCORD_SERVER_ID!)?.roles.cache.sort((a, b) => b.position - a.position).map(x => { return { id: x.id, name: x.name } })));

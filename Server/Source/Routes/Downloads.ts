@@ -72,11 +72,11 @@ async (req, res) => {
         return res.status(400).send("File name failed validation.");
 
     if (!req.params.File.endsWith(".m4s") && !req.params.File.endsWith(".webm"))
-        return res.sendStatus(403);
+        return res.sendStatus(403).send("Unsupported File Format.");
 
     const ChunkPath = `${SAVED_DATA_PATH}/Songs/${SongData.ID}/${IsPreview ? `PreviewChunks` : `Chunks`}/${req.params.File}`
     if (!existsSync(ChunkPath))
-        return res.sendStatus(404);
+        return res.status(404).send("Chunk not found.");
 
     res.set("content-type", "video/mp4")
     res.send(readFileSync(ChunkPath));
