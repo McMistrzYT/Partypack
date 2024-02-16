@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "fs";
 import { FULL_SERVER_ROOT, SAVED_DATA_PATH } from "../Modules/Constants";
 import { CreateBlurl } from "../Modules/BLURL";
 import { Song } from "../Schemas/Song";
-import { RequireAuthentication } from "../Modules/Middleware";
+import { OptionalAuthentication, RequireAuthentication } from "../Modules/Middleware";
 import { UserPermissions } from "../Schemas/User";
 import path from "path";
 
@@ -12,18 +12,23 @@ const App = Router();
 App.get("/api/download/partypacker", (_, res) => res.redirect(`${FULL_SERVER_ROOT}/assets/Partypack-Launcher.zip`))
 
 App.get("/song/download/:InternalID/:File",
-RequireAuthentication(),
+OptionalAuthentication(),
 async (req, res) => {
     //const Song = AvailableFestivalSongs.find(x => x.UUID === req.params.SongUUID);
     const SongData = await Song.findOne({ where: [ { ID: req.params.InternalID}, { PID: req.params.InternalID }  ], relations: { Author: true } });
     if (!SongData)
         return res.status(404).send("Song not found.");
 
-    const IsPreview = SongData.ID != SongData.PID && req.params.InternalID == SongData.PID;
+    const IsPreview = SongData.ID !== SongData.PID && req.params.InternalID == SongData.PID;
     const ManifestPath = `${SAVED_DATA_PATH}/Songs/${SongData.ID}/${IsPreview ? `PreviewManifest.mpd` : `Manifest.mpd`}`;
     
-    if (SongData.IsDraft && (req.user!.PermissionLevel! < UserPermissions.VerifiedUser && SongData.Author.ID !== req.user!.ID))
-        return res.status(403).send("You cannot use this track, because it's a draft.");
+    if (SongData.IsDraft) {
+        if (!req.user)
+            return res.status(403).send("Please log in to see details of this draft.");
+
+        if (req.user.PermissionLevel! < UserPermissions.VerifiedUser && SongData.Author.ID !== req.user!.ID)
+            return res.status(403).send("You cannot use this track, because it's a draft.");
+    }
 
     const BaseURL = `${FULL_SERVER_ROOT}/song/download/${SongData.ID}/`;
     switch (req.params.File.toLowerCase()) {

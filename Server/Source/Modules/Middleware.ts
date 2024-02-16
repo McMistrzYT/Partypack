@@ -13,6 +13,28 @@ declare global {
     }
 }
 
+export function OptionalAuthentication(Relations?: object) {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        if (!req.header("X-Partypack-Token") && !req.cookies["Token"] && !req.header("Authorization"))
+            return next();
+
+        let JWT: JwtPayload;
+        try {
+            JWT = verify(req.header("X-Partypack-Token") ?? req.cookies["Token"] ?? req.header("Authorization"), JWT_KEY!) as JwtPayload;
+        } catch (err) {
+            console.error(err);
+            return next();
+        }
+
+        const UserData = await User.findOne({ where: { ID: JWT.ID }, relations: Relations });
+        if (!UserData)
+            return next();
+
+        req.user = UserData;
+        next();
+    }
+}
+
 export function RequireAuthentication(Relations?: object) {
     return async (req: Request, res: Response, next: NextFunction) => {
         if (!req.header("X-Partypack-Token") && !req.cookies["Token"] && !req.header("Authorization"))

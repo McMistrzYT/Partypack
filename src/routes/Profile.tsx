@@ -187,7 +187,7 @@ export function Profile() {
 									<ActionMenu.Overlay width="medium">
 										<ActionList>
 											{
-												availableOverrides.map(x => {
+												availableOverrides.filter(x => librarySongs.findIndex(y => y.Override === x.Template) === -1).map(x => {
 													return <ActionList.Item onSelect={async () => {
 														setIsActivateDialogOpen(false);
 														const Res = await axios.post("/api/library/me/activate", { SongID: overriding!.ID!, ToOverride: x.Template });

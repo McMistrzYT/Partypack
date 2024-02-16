@@ -131,7 +131,8 @@ async (req, res) => {
     res.json(SongData.Package());
 })
 
-App.get("/available", (__, res) => res.json(Object.values(OriginalSparks!).filter(x => !!x.track).map(x => { return { Name: x.track.tt, Template: x.track.ti.substring(11) }; }).sort((a, b) => a.Name.toLowerCase() > b.Name.toLowerCase() ? 1 : -1)))
+// i have no fucking clue why, but kendrick lamar's i does not work when replacing
+App.get("/available", (__, res) => res.json(Object.values(OriginalSparks!).filter(x => !!x.track).filter(x => x.track.tt !== "i").map(x => { return { Name: x.track.tt, Template: x.track.ti.substring(11) }; }).sort((a, b) => a.Name.toLowerCase() > b.Name.toLowerCase() ? 1 : -1)))
 
 export default {
     App,
