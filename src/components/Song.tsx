@@ -1,8 +1,10 @@
-import { Box, Label, Text } from "@primer/react";
+import { Box, Label, Text, Link } from "@primer/react";
 import { Divider } from "@primer/react/lib-esm/ActionList/Divider";
 import { SongStatus } from "../utils/Extensions";
 import { LabelColorOptions } from "@primer/react/lib-esm/Label/Label";
+import { LinkIcon } from "@primer/octicons-react"
 import DefaultCover from "../assets/NoCoverDetected.png";
+import { toast } from "react-toastify";
 
 export function Song({ data, children }: { data: any, children?: JSX.Element[] | JSX.Element | string }) {
     function GetStatusLabel() {
@@ -21,7 +23,9 @@ export function Song({ data, children }: { data: any, children?: JSX.Element[] |
             case SongStatus.DEFAULT:
                 // no label unless draft
                 Variant = "danger";
-                if (data.IsDraft)
+                if (data.IsPublicDraft)
+                    LabelStr = "Draft - public"
+                else if (data.IsDraft)
                     LabelStr = "Draft - not published"
                 break;
             case SongStatus.PUBLIC:
@@ -59,6 +63,12 @@ export function Song({ data, children }: { data: any, children?: JSX.Element[] |
                 <Text sx={{ display: "block", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}><b>{data.Name}</b></Text>
                 {
                     GetStatusLabel()
+                }
+                {
+                    data.Status == SongStatus.PUBLIC || data.IsPublicDraft ? <Link sx={{ cursor: "pointer", marginLeft: 1 }} onClick={() => {
+                        navigator.clipboard.writeText(window.location.origin + "/song/" + data.ID);
+                        toast("Copied song link to clipboard",{type:"success"})
+                    }}><LinkIcon /></Link> : <></>
                 }
                 {
                     children ? <Divider /> : <></>

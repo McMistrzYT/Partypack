@@ -4,6 +4,7 @@ import { red } from "colorette";
 import { FULL_SERVER_ROOT, SAVED_DATA_PATH } from "./Constants";
 import { User } from "../Schemas/User";
 import { Song } from "../Schemas/Song";
+import { UserPermissions } from "../Schemas/User";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 
 export let FullFortnitePages: { [key: string]: any } | null = null;
@@ -60,7 +61,7 @@ export async function GenerateFortnitePages(ForUser: User | null): Promise<{ Suc
         return { Success: true, FNPages: null };
 
     const AllSongs: { [key: string]: unknown } = {}; // too lazy to actually write a schema for this :D
-    const Overrides = ForUser.Library.map(x => { return { ...x, SongData: Song.findOne({ where: { ID: x.SongID } }) }; });
+    const Overrides = ForUser.Library.map(x => { return { ...x, SongData: Song.findOne({ where: { ID: x.SongID }, relations: { Author: true } }) }; });
     const UsersLibrary = await Promise.all(Overrides.map(x => x.SongData));
 
     for (const Song of UsersLibrary) 
@@ -75,6 +76,9 @@ export async function GenerateFortnitePages(ForUser: User | null): Promise<{ Suc
         const OriginalTrack = Object.values(OriginalSparks!).find(x => x.track?.ti === `SparksSong:${OverridingAs.Overriding.toLowerCase()}`);
         if (!OriginalTrack)
             continue;
+
+        if (Song.IsDraft && !Song.IsPublicDraft && (ForUser.PermissionLevel < UserPermissions.TrackVerifier && Song.Author.ID !== ForUser!.ID))
+            continue; // skip song if user doesn't have permission to play it
 
         AllSongs[OriginalTrack._title] = {
             _title: OriginalTrack._title,

@@ -45,6 +45,20 @@ ValidateBody(j.object({
     ToOverride: j.string().pattern(/^sid_placeholder_(\d){1,3}$/i).required()
 })),
 async (req, res) => {
+
+    // if user activated someone else's public draft, and that person made their draft private again, user might have private drafts he's not able to deactivate
+    // so we must check those and auto-deactivate them to free slots before proceeding
+    let idx = req.user!.Library!.length;
+    while (idx--) // go through each song and deactivate invalid ones before proceeding
+    {
+        const SongData = await Song.findOne({ where: { ID: req.user!.Library![idx].SongID }, relations: { Author: true } });
+        if (SongData!.IsDraft && !SongData!.IsPublicDraft && (req.user!.PermissionLevel < UserPermissions.TrackVerifier && SongData!.Author.ID !== req.user!.ID))
+        {
+            req.user?.Library.splice(idx, 1);
+        }
+    }
+    // this shouldn't lead to front/back desync since invalid active songs aren't visible in the Profile page anyway
+
     if (req.user!.Library!.length >= 15)
         return res.status(400).send("You have too many active songs. Please deactivate some to free up space.");
 
@@ -55,7 +69,7 @@ async (req, res) => {
     if (!SongData)
         return res.status(404).send("Provided song doesn't exist.");
 
-    if (SongData.IsDraft && (req.user!.PermissionLevel < UserPermissions.TrackVerifier && SongData.Author.ID !== req.user!.ID))
+    if (SongData.IsDraft && !SongData.IsPublicDraft && (req.user!.PermissionLevel < UserPermissions.TrackVerifier && SongData.Author.ID !== req.user!.ID))
         return res.status(403).send("You cannot activate this track, because it's a draft.");
 
     req.user!.Library.push({ SongID: req.body.SongID.toLowerCase(), Overriding: req.body.ToOverride.toLowerCase() });
@@ -93,7 +107,7 @@ async (req, res) => {
     if (!SongData)
         return res.status(404).send("Provided song doesn't exist.");
 
-    if (SongData.IsDraft && (req.user.PermissionLevel < UserPermissions.TrackVerifier && SongData.Author.ID !== req.user.ID))
+    if (SongData.IsDraft && !SongData.IsPublicDraft && (req.user.PermissionLevel < UserPermissions.TrackVerifier && SongData.Author.ID !== req.user.ID))
         return res.status(403).send("You cannot subscribe to this track, because it's a draft.");
 
     req.user?.BookmarkedSongs.push(SongData);
@@ -125,7 +139,7 @@ async (req, res) => {
     if (!SongData)
         return res.status(404).send("Provided song doesn't exist.");
 
-    if (SongData.IsDraft && (req.user!.PermissionLevel < UserPermissions.TrackVerifier && SongData.Author.ID !== req.user!.ID))
+    if (SongData.IsDraft && !SongData.IsPublicDraft && (req.user!.PermissionLevel < UserPermissions.TrackVerifier && SongData.Author.ID !== req.user!.ID))
         return res.status(403).send("You cannot use assets of this track, because it's a draft.");
 
     res.json(SongData.Package());
