@@ -360,6 +360,11 @@ App.post("/submit",
 
         SongData.Status = req.user!.PermissionLevel! >= UserPermissions.VerifiedUser ? SongStatus.ACCEPTED : SongStatus.AWAITING_REVIEW;
         SongData.DraftReviewSubmittedAt = new Date();
+        if (SongData.Status == SongStatus.ACCEPTED) // if song is auto-accepted, it means the uploader itself reviewed it
+        {
+            SongData.ReviewSubmittedAt = SongData.DraftReviewSubmittedAt;
+            SongData.ReviewedBy = req.user;
+        }
         await SongData.save();
 
         return res.send("Song has been submitted for approval by admins.");
