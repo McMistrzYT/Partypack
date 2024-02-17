@@ -42,6 +42,19 @@ export const DBSource = new DataSource({
         await Song.save();
         Debug(`${Song.Name} PID is now ${Song.PID} to match ${Song.ID}`);
     })
+
+    // Look for published songs without ReviewSubmittedAt to fix before we do anything else
+    const SongsWithoutReviewDate = await Song.find({ where: { IsDraft: false, ReviewSubmittedAt: IsNull() } });
+    Debug(`We have ${SongsWithoutReviewDate.length} published song${SongsWithoutReviewDate.length != 1 ? "s" : ""} without review date`);
+
+    SongsWithoutReviewDate.forEach(async (Song) => {
+        Debug(`Fixing up ${Song.Name} PID`);
+
+        Song.ReviewSubmittedAt = Song.CreationDate;
+
+        await Song.save();
+        Debug(`${Song.Name} Review date is now ${Song.ReviewSubmittedAt} to match ${Song.CreationDate}`);
+    })
 })();
 
 /*
