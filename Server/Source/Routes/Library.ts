@@ -64,6 +64,31 @@ async (req, res) => {
     res.json(req.user!.Library);
 })
 
+App.post("/me/replaceactivated",
+RequireAuthentication(),
+ValidateBody(j.array().items(j.object({
+    SongID: j.string().uuid().required(),
+    Overriding: j.string().pattern(/^sid_placeholder_(\d){1,3}$/i).required()
+}))),
+async (req, res) => {
+    if(req.body.length > 15)
+        return res.status(400).send("That song list has too many songs in it.")
+
+    for(var i = 0; i < req.body.length; i++){
+        const SongData = await Song.findOne({where: { ID: req.body[i].SongID }, relations: { Author: true }});
+        if (!SongData)
+            return res.status(404).send("One of the songs in that list doesn't exist.");
+
+        if (SongData.IsDraft && (req.user!.PermissionLevel < UserPermissions.TrackVerifier && SongData.Author.ID !== req.user!.ID))
+            return res.status(403).send("One of the songs in that list is a draft you don't have access to.");
+    }
+
+    req.user!.Library = req.body;
+    req.user!.save();
+
+    res.sendStatus(200);
+})
+
 App.post("/me/deactivate",
 RequireAuthentication(),
 ValidateBody(j.object({
