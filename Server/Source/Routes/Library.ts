@@ -72,9 +72,16 @@ ValidateBody(j.array().items(j.object({
 }))),
 async (req, res) => {
     if(req.body.length > 15)
-        return res.status(400).send("That song list has too many songs in it.")
+        return res.status(400).send("That song list has too many songs in it.");
+
 
     for(var i = 0; i < req.body.length; i++){
+        if(req.body.map( (song) => song.SongID).indexOf(req.body[i].SongID) !== i)
+            return res.status(400).send("There are duplicate songs in that list.");
+
+        if(req.body.map( (song) => song.Overriding).indexOf(req.body[i].Overriding) !== i)
+            return res.status(400).send("There are duplicate overrides in that list.");
+
         const SongData = await Song.findOne({where: { ID: req.body[i].SongID }, relations: { Author: true }});
         if (!SongData)
             return res.status(404).send("One of the songs in that list doesn't exist.");
