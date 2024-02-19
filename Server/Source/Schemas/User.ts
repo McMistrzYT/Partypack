@@ -40,6 +40,9 @@ export class User extends BaseEntity {
     @JoinTable()
     BookmarkedSongs: Song[];
 
+    @Column({ default: false })
+    SharingLibrary: boolean;
+
     public Package(IncludeRatings: boolean = false, IncludeCreatedTracks: boolean = false) {
         return {
             ...this,

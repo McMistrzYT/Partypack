@@ -73,6 +73,7 @@ export function Profile() {
 	const [overriding, setOverriding] = useState<{ ID: string }>({ ID: "" });
 	const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState<boolean>(false);
 	const [updating, setUpdating] = useState<{ Status: SongStatus, ID: string, ReasonForDenial?: string, ReviewedBy?: { PermissionLevel: UserPermissions, Username: string, DisplayName: string } }>({ Status: SongStatus.DEFAULT, ID: "", ReasonForDenial: "", ReviewedBy: null });
+	const [sharingLibrary, setSharingLibrary] = useState<boolean>(false);
 
 	useEffect(() => {
 		(async () => {
@@ -97,6 +98,7 @@ export function Profile() {
 			setBookmarkedSongs(Data.data.Bookmarks);
 			setDraftsSongs(Data.data.Created);
 			setAvailableOverrides(Overrides.data);
+			setSharingLibrary(Data.data.Sharing);
 		})();
 	}, []);
 
@@ -115,6 +117,17 @@ export function Profile() {
 									{ GetLabelStyle(state.UserDetails?.Role, { alignSelf: "center", marginLeft: 2 }) }
 								</PageHeader.Title>
 								<PageHeader.Actions>
+									<Button size="large" variant={sharingLibrary ? "danger" : "primary"} onClick={async () => {
+										const Res = await axios.post("/api/library/me/togglesharing");
+										if(Res.status === 200)
+											setSharingLibrary(Res.data.Sharing);
+										else
+											toast("Something went wrong toggling song sharing", {type: "error"});
+									}}>{sharingLibrary ? "Disable Song Sharing" : "Enable Song Sharing"}</Button>
+									<Button variant="primary" size="large" onClick={ async () => {
+										await navigator.clipboard.writeText(state.UserDetails.ID);
+										toast("Copied discord ID to keyboard!", {type: "success"});
+									}}>Copy Discord ID</Button>
 									<Button size="large" variant="danger" onClick={() => { removeCookie("UserDetails"); removeCookie("Token"); setState({ ...state, UserDetails: null }); window.location.assign("/") }}>Log out</Button>
 								</PageHeader.Actions>
 							</PageHeader.TitleArea>
@@ -210,38 +223,26 @@ export function Profile() {
 						</Dialog>
 
 						<Heading sx={{ marginBottom: 2 }}>Active Songs</Heading>
-						<Button variant="primary" sx={{ display:"inline", marginRight: "4px", marginBottom: "8px"}} onClick={ async () => {
-							await navigator.clipboard.writeText(JSON.stringify(librarySongs.map( (Song) => { return { SongID: Song.ID, Overriding: Song.Override } })));
-							toast("Copied active song list to keyboard!", {type: "success"});
-						}}>Export Active Songs</Button>
 						<Button variant="primary" sx={{ display:"inline" }} onClick={ async () => {
-							const NewLibrary = prompt("Paste in the new active list here."); // TODO: maybe use something other than a prompt, but it gets the job done for now
-							let NewLibraryJson: {SongID: string, Overriding: string}[];
-
-							try {
-								NewLibraryJson = JSON.parse(NewLibrary);
-							} catch(err) {
-								toast("Invalid list!", {type: "error"});
-								return;
-							}
+							const ID = prompt("Paste Discord ID here...");
 							
-							const Res = await axios.post("/api/library/me/replaceactivated", NewLibraryJson);
+							const Res = await axios.post("/api/library/me/copyactivated", {ID: ID});
 							if(Res.status === 200) {
 								const NewLibSongs = (await Promise.all(
-									NewLibraryJson.map(
+									Res.data.map(
 										(x: { SongID: string; }) =>
 											axios.get(`/api/library/song/data/${x.SongID}`))
 									)).filter(x => x.status === 200).map(
 										x => {
 											return {
 												...x.data,
-												Override: NewLibraryJson.find((y: { SongID: string; }) => y.SongID === x.data.ID).Overriding}
+												Override: Res.data.find((y: { SongID: string; }) => y.SongID === x.data.ID).Overriding}
 											});
 								setLibrarySongs(NewLibSongs);
 							}
 							else
 								toast(Res.data, {type: "error"})
-						}}>Import Active Songs</Button>
+						}}>Import songs from Discord ID</Button>
 						<Box className="songCategory">
 							{
 								librarySongs.length >= 1 ?

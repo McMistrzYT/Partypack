@@ -3,7 +3,7 @@ import { RequireAuthentication, ValidateBody } from "../Modules/Middleware";
 import { Song, SongStatus } from "../Schemas/Song";
 import { OriginalSparks } from "../Modules/FNUtil";
 import j from "joi";
-import { UserPermissions } from "../Schemas/User";
+import { User, UserPermissions } from "../Schemas/User";
 import { AsyncFilter } from "../Modules/Extensions";
 
 const App = Router();
@@ -34,7 +34,8 @@ App.get("/me", RequireAuthentication({ BookmarkedSongs: true, CreatedTracks: { R
     res.json({
         Bookmarks: req.user!.BookmarkedSongs.map(x => x.Package()),
         Created: req.user!.CreatedTracks.map(x => x.Package(true)),
-        Library: req.user!.Library
+        Library: req.user!.Library,
+        Sharing: req.user!.SharingLibrary // this probably isnt the best place to send this info...
     })
 })
 
@@ -64,38 +65,6 @@ async (req, res) => {
     res.json(req.user!.Library);
 })
 
-App.post("/me/replaceactivated",
-RequireAuthentication(),
-ValidateBody(j.array().items(j.object({
-    SongID: j.string().uuid().required(),
-    Overriding: j.string().pattern(/^sid_placeholder_(\d){1,3}$/i).required()
-}))),
-async (req, res) => {
-    if(req.body.length > 15)
-        return res.status(400).send("That song list has too many songs in it.");
-
-
-    for(var i = 0; i < req.body.length; i++){
-        if(req.body.map( (song) => song.SongID).indexOf(req.body[i].SongID) !== i)
-            return res.status(400).send("There are duplicate songs in that list.");
-
-        if(req.body.map( (song) => song.Overriding).indexOf(req.body[i].Overriding) !== i)
-            return res.status(400).send("There are duplicate overrides in that list.");
-
-        const SongData = await Song.findOne({where: { ID: req.body[i].SongID }, relations: { Author: true }});
-        if (!SongData)
-            return res.status(404).send("One of the songs in that list doesn't exist.");
-
-        if (SongData.IsDraft && (req.user!.PermissionLevel < UserPermissions.TrackVerifier && SongData.Author.ID !== req.user!.ID))
-            return res.status(403).send("One of the songs in that list is a draft you don't have access to.");
-    }
-
-    req.user!.Library = req.body;
-    req.user!.save();
-
-    res.sendStatus(200);
-})
-
 App.post("/me/deactivate",
 RequireAuthentication(),
 ValidateBody(j.object({
@@ -110,6 +79,33 @@ async (req, res) => {
     req.user?.save();
 
     res.json(req.user?.Library);
+})
+
+App.post("/me/copyactivated",
+RequireAuthentication(),
+ValidateBody(j.object({
+    ID: j.string()
+})),
+async (req, res) => {
+    const ToFind = await User.findOne({where: {ID: req.body.ID}});
+
+    if(!ToFind)
+        return res.status(404).send("Could not find that user.");
+    if(!ToFind?.SharingLibrary)
+        return res.status(403).send("That user doesnt have song sharing enabled.");
+
+    req.user!.Library = ToFind!.Library;
+    req.user!.save();
+
+    res.json(ToFind!.Library);
+})
+
+App.post("/me/togglesharing",
+RequireAuthentication(),
+async (req, res) => {
+    req.user!.SharingLibrary = !req.user!.SharingLibrary;
+    req.user!.save();
+    res.json({Sharing: req.user!.SharingLibrary});
 })
 
 App.post("/me/bookmark",
