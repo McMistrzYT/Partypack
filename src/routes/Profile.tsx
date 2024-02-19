@@ -210,7 +210,7 @@ export function Profile() {
 						</Dialog>
 
 						<Heading sx={{ marginBottom: 2 }}>Active Songs</Heading>
-						<Button variant="primary" sx={{ display:"inline" }} onClick={ async () => {
+						<Button variant="primary" sx={{ display:"inline", marginRight: "4px", marginBottom: "8px"}} onClick={ async () => {
 							await navigator.clipboard.writeText(JSON.stringify(librarySongs.map( (Song) => { return { SongID: Song.ID, Overriding: Song.Override } })));
 							toast("Copied active song list to keyboard!", {type: "success"});
 						}}>Export Active Songs</Button>
