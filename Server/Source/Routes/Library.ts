@@ -92,6 +92,13 @@ async (req, res) => {
         return res.status(404).send("Could not find that user.");
     if(!ToFind?.SharingLibrary)
         return res.status(403).send("That user doesnt have song sharing enabled.");
+    for(var i = 0; i < ToFind!.Library.length; i++){
+        const Found = await Song.findOne({where: {ID: ToFind!.Library[i].SongID}});
+        if(!Found)
+            return res.status(404).send("One of that users songs is invalid."); // this error SHOULD never come up... right?
+        if(Found.IsDraft && (req.user!.PermissionLevel < UserPermissions.TrackVerifier && Found.Author.ID !== req.user!.ID))
+            return res.status(403).send("One of that users songs is a draft you dont have access to.");
+    }
 
     req.user!.Library = ToFind!.Library;
     req.user!.save();

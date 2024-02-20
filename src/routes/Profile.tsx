@@ -250,11 +250,11 @@ export function Profile() {
 						</Dialog>
 
 						<Heading sx={{ marginBottom: 2 }}>Active Songs</Heading>
-						<Button variant="primary" sx={{ display:"inline" }} onClick={ async () => {
+						<Button variant="primary" sx={{ display:"inline", marginBottom: "8px" }} onClick={ async () => {
 							const ID = prompt("Paste Discord ID here...");
 							
 							const Res = await axios.post("/api/library/me/copyactivated", {ID: ID});
-							if(Res.status === 200) {
+							if (Res.status === 200) {
 								const NewLibSongs = (await Promise.all(
 									Res.data.map(
 										(x: { SongID: string; }) =>
