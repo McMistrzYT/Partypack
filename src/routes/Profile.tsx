@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Buffer } from "buffer/";
-import { ActionList, ActionMenu, Avatar, Box, Button, Dialog, FormControl, Heading, Label, Text, TextInput } from "@primer/react"
+import { ActionList, ActionMenu, Avatar, Box, Button, CheckboxGroup, Checkbox, Dialog, FormControl, Heading, Label, Text, TextInput } from "@primer/react"
 import { Divider } from "@primer/react/lib-esm/ActionList/Divider";
 import { PageHeader } from "@primer/react/drafts";
 import { useContext, useEffect, useRef, useState } from "react";
@@ -63,6 +63,7 @@ export function GetLabelStyle(Role: UserPermissions, Style: BetterSystemStyleObj
 
 export function Profile() {
 	const formRef = useRef<HTMLFormElement>(null);
+	const privacyFormRef = useRef<HTMLFormElement>(null);
 	const { state, setState } = useContext(SiteContext);
 	const [, , removeCookie] = useCookies();
 	const [isActivateDialogOpen, setIsActivateDialogOpen] = useState<boolean>(false);
@@ -73,6 +74,8 @@ export function Profile() {
 	const [overriding, setOverriding] = useState<{ ID: string }>({ ID: "" });
 	const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState<boolean>(false);
 	const [updating, setUpdating] = useState<{ Status: SongStatus, ID: string, ReasonForDenial?: string, ReviewedBy?: { PermissionLevel: UserPermissions, Username: string, DisplayName: string } }>({ Status: SongStatus.DEFAULT, ID: "", ReasonForDenial: "", ReviewedBy: null });
+	const [isPrivacyDialogOpen, setIsPrivacyDialogOpen] = useState<boolean>(false);
+	const [privacyPreferences, setPrivacyPreferences] = useState<{SharingLibrary: boolean}>({SharingLibrary: false});
 
 	useEffect(() => {
 		(async () => {
@@ -115,6 +118,17 @@ export function Profile() {
 									{ GetLabelStyle(state.UserDetails?.Role, { alignSelf: "center", marginLeft: 2 }) }
 								</PageHeader.Title>
 								<PageHeader.Actions>
+									<Button variant="default" size="large" onClick={ async () =>{
+										const Res = await axios.get("/api/privacy/me");
+										if (Res.status === 200) {
+											setPrivacyPreferences(Res.data);
+											setIsPrivacyDialogOpen(true);
+										}
+									}}>Privacy Settings</Button>
+									<Button variant="primary" size="large" onClick={ async () => {
+										await navigator.clipboard.writeText(state.UserDetails.ID);
+										toast("Copied discord ID to keyboard!", {type: "success"});
+									}}>Copy Discord ID</Button>
 									<Button size="large" variant="danger" onClick={() => { removeCookie("UserDetails"); removeCookie("Token"); setState({ ...state, UserDetails: null }); window.location.assign("/") }}>Log out</Button>
 								</PageHeader.Actions>
 							</PageHeader.TitleArea>
@@ -209,7 +223,53 @@ export function Profile() {
 							</Box>
 						</Dialog>
 
+						<Dialog isOpen={isPrivacyDialogOpen} onDismiss={() => setIsPrivacyDialogOpen(false)} aria-labelledby="header">
+							<Dialog.Header>Privacy Settings</Dialog.Header>
+							<Box p={3}>
+								<form ref={privacyFormRef}>
+										<FormControl>
+											<Checkbox value="SharingLibrary" defaultChecked={privacyPreferences.SharingLibrary} />
+											<FormControl.Label>Share Active Songs</FormControl.Label>
+											<FormControl.Caption>Allows users to copy your active song list from your discord ID.</FormControl.Caption>
+										</FormControl>
+									<Divider />
+									<Button type="submit"  onClick={async (e) => {
+										e.preventDefault();
+
+										const Res = await axios.post("/api/privacy/me/updatePreferences", {
+											SharingLibrary: privacyFormRef.current.SharingLibrary.checked
+										});
+
+										if (Res.status === 200) {
+											toast("Privacy settings updated successfully", {type: "success"});
+											setIsPrivacyDialogOpen(false);
+										}
+									}}>Save Changes</Button>
+								</form>
+							</Box>
+						</Dialog>
+
 						<Heading sx={{ marginBottom: 2 }}>Active Songs</Heading>
+						<Button variant="primary" sx={{ display:"inline", marginBottom: "8px" }} onClick={ async () => {
+							const ID = prompt("Paste Discord ID here...");
+							
+							const Res = await axios.post("/api/library/me/copyactivated", {ID: ID});
+							if (Res.status === 200) {
+								const NewLibSongs = (await Promise.all(
+									Res.data.map(
+										(x: { SongID: string; }) =>
+											axios.get(`/api/library/song/data/${x.SongID}`))
+									)).filter(x => x.status === 200).map(
+										x => {
+											return {
+												...x.data,
+												Override: Res.data.find((y: { SongID: string; }) => y.SongID === x.data.ID).Overriding}
+											});
+								setLibrarySongs(NewLibSongs);
+							}
+							else
+								toast(Res.data, {type: "error"})
+						}}>Import songs from Discord ID</Button>
 						<Box className="songCategory">
 							{
 								librarySongs.length >= 1 ?

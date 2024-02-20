@@ -3,7 +3,7 @@ import { RequireAuthentication, ValidateBody } from "../Modules/Middleware";
 import { Song, SongStatus } from "../Schemas/Song";
 import { OriginalSparks } from "../Modules/FNUtil";
 import j from "joi";
-import { UserPermissions } from "../Schemas/User";
+import { User, UserPermissions } from "../Schemas/User";
 import { AsyncFilter } from "../Modules/Extensions";
 
 const App = Router();
@@ -78,6 +78,32 @@ async (req, res) => {
     req.user?.save();
 
     res.json(req.user?.Library);
+})
+
+App.post("/me/copyactivated",
+RequireAuthentication(),
+ValidateBody(j.object({
+    ID: j.string()
+})),
+async (req, res) => {
+    const ToFind = await User.findOne({where: {ID: req.body.ID}});
+
+    if(!ToFind)
+        return res.status(404).send("Could not find that user.");
+    if(!ToFind?.SharingLibrary)
+        return res.status(403).send("That user doesnt have song sharing enabled.");
+    for(var i = 0; i < ToFind!.Library.length; i++){
+        const Found = await Song.findOne({where: {ID: ToFind!.Library[i].SongID}});
+        if(!Found)
+            return res.status(404).send("One of that users songs is invalid."); // this error SHOULD never come up... right?
+        if(Found.IsDraft && (req.user!.PermissionLevel < UserPermissions.TrackVerifier && Found.Author.ID !== req.user!.ID))
+            return res.status(403).send("One of that users songs is a draft you dont have access to.");
+    }
+
+    req.user!.Library = ToFind!.Library;
+    req.user!.save();
+
+    res.json(ToFind!.Library);
 })
 
 App.post("/me/bookmark",
