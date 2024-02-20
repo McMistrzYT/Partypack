@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Buffer } from "buffer/";
-import { ActionList, ActionMenu, Avatar, Box, Button, Dialog, FormControl, Heading, Label, Text, TextInput } from "@primer/react"
+import { ActionList, ActionMenu, Avatar, Box, Button, CheckboxGroup, Checkbox, Dialog, FormControl, Heading, Label, Text, TextInput } from "@primer/react"
 import { Divider } from "@primer/react/lib-esm/ActionList/Divider";
 import { PageHeader } from "@primer/react/drafts";
 import { useContext, useEffect, useRef, useState } from "react";
@@ -63,6 +63,7 @@ export function GetLabelStyle(Role: UserPermissions, Style: BetterSystemStyleObj
 
 export function Profile() {
 	const formRef = useRef<HTMLFormElement>(null);
+	const privacyFormRef = useRef<HTMLFormElement>(null);
 	const { state, setState } = useContext(SiteContext);
 	const [, , removeCookie] = useCookies();
 	const [isActivateDialogOpen, setIsActivateDialogOpen] = useState<boolean>(false);
@@ -73,7 +74,8 @@ export function Profile() {
 	const [overriding, setOverriding] = useState<{ ID: string }>({ ID: "" });
 	const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState<boolean>(false);
 	const [updating, setUpdating] = useState<{ Status: SongStatus, ID: string, ReasonForDenial?: string, ReviewedBy?: { PermissionLevel: UserPermissions, Username: string, DisplayName: string } }>({ Status: SongStatus.DEFAULT, ID: "", ReasonForDenial: "", ReviewedBy: null });
-	const [sharingLibrary, setSharingLibrary] = useState<boolean>(false);
+	const [isPrivacyDialogOpen, setIsPrivacyDialogOpen] = useState<boolean>(false);
+	const [privacyPreferences, setPrivacyPreferences] = useState<{SharingLibrary: boolean}>({SharingLibrary: false});
 
 	useEffect(() => {
 		(async () => {
@@ -98,7 +100,6 @@ export function Profile() {
 			setBookmarkedSongs(Data.data.Bookmarks);
 			setDraftsSongs(Data.data.Created);
 			setAvailableOverrides(Overrides.data);
-			setSharingLibrary(Data.data.Sharing);
 		})();
 	}, []);
 
@@ -117,13 +118,13 @@ export function Profile() {
 									{ GetLabelStyle(state.UserDetails?.Role, { alignSelf: "center", marginLeft: 2 }) }
 								</PageHeader.Title>
 								<PageHeader.Actions>
-									<Button size="large" variant={sharingLibrary ? "danger" : "primary"} onClick={async () => {
-										const Res = await axios.post("/api/library/me/togglesharing");
-										if(Res.status === 200)
-											setSharingLibrary(Res.data.Sharing);
-										else
-											toast("Something went wrong toggling song sharing", {type: "error"});
-									}}>{sharingLibrary ? "Disable Song Sharing" : "Enable Song Sharing"}</Button>
+									<Button variant="default" size="large" onClick={ async () =>{
+										const Res = await axios.get("/api/privacy/me");
+										if (Res.status === 200) {
+											setPrivacyPreferences(Res.data);
+											setIsPrivacyDialogOpen(true);
+										}
+									}}>Privacy Settings</Button>
 									<Button variant="primary" size="large" onClick={ async () => {
 										await navigator.clipboard.writeText(state.UserDetails.ID);
 										toast("Copied discord ID to keyboard!", {type: "success"});
@@ -219,6 +220,32 @@ export function Profile() {
 										</ActionList>
 									</ActionMenu.Overlay>
 								</ActionMenu>
+							</Box>
+						</Dialog>
+
+						<Dialog isOpen={isPrivacyDialogOpen} onDismiss={() => setIsPrivacyDialogOpen(false)} aria-labelledby="header">
+							<Dialog.Header>Privacy Settings</Dialog.Header>
+							<Box p={3}>
+								<form ref={privacyFormRef}>
+										<FormControl>
+											<Checkbox value="SharingLibrary" defaultChecked={privacyPreferences.SharingLibrary} />
+											<FormControl.Label>Share Active Songs</FormControl.Label>
+											<FormControl.Caption>Allows users to copy your active song list from your discord ID.</FormControl.Caption>
+										</FormControl>
+									<Divider />
+									<Button type="submit"  onClick={async (e) => {
+										e.preventDefault();
+
+										const Res = await axios.post("/api/privacy/me/updatePreferences", {
+											SharingLibrary: privacyFormRef.current.SharingLibrary.checked
+										});
+
+										if (Res.status === 200) {
+											toast("Privacy settings updated successfully", {type: "success"});
+											setIsPrivacyDialogOpen(false);
+										}
+									}}>Save Changes</Button>
+								</form>
 							</Box>
 						</Dialog>
 

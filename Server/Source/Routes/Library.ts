@@ -34,8 +34,7 @@ App.get("/me", RequireAuthentication({ BookmarkedSongs: true, CreatedTracks: { R
     res.json({
         Bookmarks: req.user!.BookmarkedSongs.map(x => x.Package()),
         Created: req.user!.CreatedTracks.map(x => x.Package(true)),
-        Library: req.user!.Library,
-        Sharing: req.user!.SharingLibrary // this probably isnt the best place to send this info...
+        Library: req.user!.Library
     })
 })
 
@@ -98,14 +97,6 @@ async (req, res) => {
     req.user!.save();
 
     res.json(ToFind!.Library);
-})
-
-App.post("/me/togglesharing",
-RequireAuthentication(),
-async (req, res) => {
-    req.user!.SharingLibrary = !req.user!.SharingLibrary;
-    req.user!.save();
-    res.json({Sharing: req.user!.SharingLibrary});
 })
 
 App.post("/me/bookmark",
